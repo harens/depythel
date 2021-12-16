@@ -1,0 +1,4 @@
+# Install development version of depythel
+# See https://stackoverflow.com/a/35998253 and https://github.com/readthedocs/readthedocs.org/issues/7156#issuecomment-638790698
+# TODO: Change this to install the local version of GitHub to allow PRs changing docs to work.
+git+git://github.com/harens/depythel@master#egg=depythel
