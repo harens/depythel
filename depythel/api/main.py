@@ -34,7 +34,8 @@
 # TODO: Allow for other repositories (not just MacPorts)
 # TODO: Test docstrings
 # TODO: At some point, refactor off the module checking
-# TODO: When retrieving from stack, make sure the variable isn't one with the same name set by the user
+# TODO: When retrieving from stack, make sure the variable isn't one with the same name
+# set by the user
 # TODO: Remove print statements - This is meant to be an api
 
 import importlib
@@ -46,13 +47,13 @@ from depythel._typing_imports import DictType
 
 # Standard tree e.g. {'a': 'b', 'b': 'a'}
 # A descriptive tree might show dependency type e.g. runtime/build
-StandardTree = DictType[str, str]
-DescriptiveTree = DictType[str, DictType[str, str]]
+StandardTree = DictType[str, str]  # pylint: disable=unsubscriptable-object
+DescriptiveTree = DictType[str, DictType[str, str]]  # pylint: disable=unsubscriptable-object
 AnyTree = Union[StandardTree, DescriptiveTree]
 
 
 def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
-    """A generator to build a dependency tree via level-order traversal.
+    """Generate a dependency tree via level-order traversal.
 
     Each call of the generator builds the next child in the tree.
 
@@ -70,17 +71,22 @@ def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
         >>> gping_generator()
         {'gping': {'cargo': 'build', 'clang-12': 'build'}}
         >>> gping_generator()
-        {'gping': {'cargo': 'build', 'clang-12': 'build'}, 'cargo': {'cargo-bootstrap': 'build', 'cmake': 'build', 'pkgconfig': 'build', 'clang-13': 'build', 'curl': 'lib', 'zlib': 'lib', 'openssl11': 'lib', 'libgit2': 'lib', 'libssh2': 'lib', 'rust': 'lib'}}
+        {'gping': {'cargo': 'build', 'clang-12': 'build'}, \
+'cargo': {'cargo-bootstrap': 'build', 'cmake': 'build', 'pkgconfig': 'build', \
+'clang-13': 'build', 'curl': 'lib', 'zlib': 'lib', 'openssl11': 'lib', \
+'libgit2': 'lib', 'libssh2': 'lib', 'rust': 'lib'}}
     """
     tree = {}
     stack = deque([name])
 
     try:
         module = importlib.import_module(f"depythel.api.repository.{repository}")
-    except ModuleNotFoundError:
-        raise ModuleNotFoundError(f"{repository} is not a supported repository")
+    except ModuleNotFoundError as error:
+        raise ModuleNotFoundError(
+            f"{repository} is not a supported repository"
+        ) from error
 
-    # Recomends not to use hasattr: https://hynek.me/articles/hasattr/
+    # Recommends not to use hasattr: https://hynek.me/articles/hasattr/
     # Instead, set a default attribute as none, and check whether it exists
     module_attribute = getattr(module, "online", None)
 
@@ -96,7 +102,7 @@ def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
         # pop turns this into depth first (via a stack)
         # popleft turns it info breadth first (via a queue)
         next_child = stack.popleft()
-        # We've checkded to make sure that the attribute is defined
+        # We've checked to make sure that the attribute is defined
         children = module.online(next_child)  # type: ignore[attr-defined]
         tree[next_child] = children
         stack.extend((child for child in children if child not in deque(tree) + stack))
@@ -108,10 +114,11 @@ def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
 def retrieve_from_stack(variable: str) -> Optional[Any]:
     """Private function to retrieve a local variable from the recursion stack.
 
-    This means that it doesn't have to be passed as an argument. Based on https://stackoverflow.com/a/58598665
+    This means that it doesn't have to be passed as an argument.
+    Based on https://stackoverflow.com/a/58598665
 
     Args:
-        The variable whose value should be achieved.
+        variable: The variable whose value should be achieved.
 
     Returns:
         The value of the variable.
@@ -139,13 +146,13 @@ def retrieve_from_stack(variable: str) -> Optional[Any]:
 # TODO: Why does this detect more cycles than the original method?
 # TODO: This can hit the recursion limit!!!
 def cycle_check(root: str, tree: AnyTree, first: bool = False) -> bool:
-    """Performs a level-order traversal of an adjacency list looking for any cycles.
+    """Perform a level-order traversal of an adjacency list looking for any cycles.
 
     Args:
         root: The root node of the dependency tree.
         tree: The dependency tree to traverse in the form of an adjacency list.
-        first: If true, the function halts as soon as the first cycle is found. Otherwise, it traverses the whole
-            tree looking for every cycle.
+        first: If true, the function halts as soon as the first cycle is found.
+            Otherwise, it traverses the whole tree looking for every cycle.
 
     Returns:
         A boolean representing whether a cycle has been detected or not.
@@ -163,7 +170,8 @@ def cycle_check(root: str, tree: AnyTree, first: bool = False) -> bool:
         pkgconfig --> libiconv --> clang-9.0 --> pkgconfig
         pkgconfig --> libiconv --> clang-9.0 --> cmake --> clang-9.0
         pkgconfig --> libiconv --> clang-9.0 --> cctools --> clang-9.0
-        Unfinished children in tree: bzip2, clang_select, curl, expat, gperf, ld64, libarchive, libcxx, libomp, libunwind-headers, libuv, libxml2, llvm-10, llvm-9.0, ncurses, perl5, xz, zlib
+        Unfinished children in tree: bzip2, clang_select, curl, expat, gperf, ld64, libarchive, \
+libcxx, libomp, libunwind-headers, libuv, libxml2, llvm-10, llvm-9.0, ncurses, perl5, xz, zlib
         True
     """
     return_value = False
@@ -201,7 +209,8 @@ def cycle_check(root: str, tree: AnyTree, first: bool = False) -> bool:
         # Be careful of leaves, where they have no children i.e. empty dict?
         elif isinstance(child, str):
             if child not in tree:
-                # Maybe give some confidence interval based on no./type of cycles and completeness of graph
+                # Maybe give some confidence interval based on no./type of cycles
+                # and completeness of graph
                 unfinished.add(child)
             else:
                 if cycle_check(child, tree, first):

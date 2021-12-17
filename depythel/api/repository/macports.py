@@ -38,12 +38,13 @@ from urllib.request import urlopen
 from depythel._typing_imports import CacheType, DictType
 
 
+# pylint doesn't like the dicttype return type.
 @CacheType
-def online(portname: str) -> DictType[str, str]:
-    """Retrieves the dependencies of a port from the MacPorts website.
+def online(portname: str) -> DictType[str, str]:  # pylint: disable=unsubscriptable-object
+    """Retrieve the dependencies of a port from the MacPorts website.
 
-    This is done via the Django Rest API. e.g. https://ports.macports.org/api/v1/ports/wget/, and includes all the deps
-    (build/runtime/test/etc.)
+    This is done via the Django Rest API. e.g. https://ports.macports.org/api/v1/ports/wget/, and
+    includes all the deps (build/runtime/test/etc.)
 
     Args:
        portname: The name of the port to retrieve the dependencies for.
@@ -61,10 +62,9 @@ def online(portname: str) -> DictType[str, str]:
     # response = requests.get(f"https://ports.macports.org/api/v1/ports/{portname}/")
 
     # TODO: Maybe deal with HTTPError more nicely
-    api_response = urlopen(f"https://ports.macports.org/api/v1/ports/{portname}/")
-
-    # Convert the HTTP request into standard JSON
-    json_response = json.load(api_response)
+    with urlopen(f"https://ports.macports.org/api/v1/ports/{portname}/") as api_response:
+        # Convert the HTTP request into standard JSON
+        json_response = json.load(api_response)
 
     # return {item["type"]: item["ports"] for item in response.json()["dependencies"]}
     # "is not None" check since in rare occasions the result is null

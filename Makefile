@@ -24,6 +24,7 @@ lint:  ## Tests whether formatting meets standards
 	$(CMD) black --check .
 	$(CMD) isort --check-only .
 	$(CMD) pydocstyle --convention=google .
+	$(CMD) pylint depythel
 
 docs:  ## Continuously build the documentation using sphinx-autobuild
 	poetry run sphinx-autobuild docs/source docs/_build/html
