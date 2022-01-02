@@ -10,7 +10,7 @@ frustration. Not only does it waste the user's time, but also that of the mainta
 deal with the resulting issue ticket requests.
 
 An example of this is from the open-source text editor `lite-xl <https://lite-xl.github.io/>`_, which this document was
-written in. Some users were `having trouble with its lua dependency <https://github.com/lite-xl/lite-xl/issues/3>`_,
+(partly) written in. Some users were `having trouble with its lua dependency <https://github.com/lite-xl/lite-xl/issues/3>`_,
 since it required specifically version 5.2. It would then fail to build if it wasn't found:
 
 .. code-block:: console
@@ -31,8 +31,8 @@ Client/End User
 The majority of existing implementations for dependency resolution are end user orientated. As an example, package
 managers will alert the user when a project fails to build.
 
-depythel will instead take the approach of focusing on the developer, and acting as a easy-to-use continuous testing
-tool. It will developed as a Python API first, so that programmers can configure the tool as they see fit. This would
+depythel will instead take the approach of focusing on the developer, and acting as an easy-to-use continuous testing
+tool. It will be developed as a Python API first, so that programmers can configure the tool as they see fit. This would
 require a higher level of expertise in the area, and so for more novice users, a pre-configured command line tool will
 also be provided. This can then be easily integrated into existing workflows.
 

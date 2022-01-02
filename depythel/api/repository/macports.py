@@ -40,7 +40,9 @@ from depythel._typing_imports import CacheType, DictType
 
 # pylint doesn't like the dicttype return type.
 @CacheType
-def online(portname: str) -> DictType[str, str]:  # pylint: disable=unsubscriptable-object
+def online(
+    portname: str,
+) -> DictType[str, str]:  # pylint: disable=unsubscriptable-object
     """Retrieve the dependencies of a port from the MacPorts website.
 
     This is done via the Django Rest API. e.g. https://ports.macports.org/api/v1/ports/wget/, and
@@ -62,7 +64,9 @@ def online(portname: str) -> DictType[str, str]:  # pylint: disable=unsubscripta
     # response = requests.get(f"https://ports.macports.org/api/v1/ports/{portname}/")
 
     # TODO: Maybe deal with HTTPError more nicely
-    with urlopen(f"https://ports.macports.org/api/v1/ports/{portname}/") as api_response:
+    with urlopen(
+        f"https://ports.macports.org/api/v1/ports/{portname}/"
+    ) as api_response:
         # Convert the HTTP request into standard JSON
         json_response = json.load(api_response)
 

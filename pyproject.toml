@@ -7,6 +7,12 @@ license = "GPL-3.0-or-later"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+pyvis = {version = "^0.1.9", optional = true}
+networkx = {version = "^2.6.3", optional = true}
+
+
+[tool.poetry.extras]
+visual = ["pyvis", "networkx"]
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
@@ -18,7 +24,6 @@ pytest = "^6.2.5"
 pytest-cov = "^2.12.1"
 Sphinx = "^4.2.0"
 sphinx-autobuild = "^2021.3.14"
-types-setuptools = "^57.4.2"
 types-toml = "^0.10.1"
 pytest-mock = "^3.6.1"
 pylint = "^2.12.2"

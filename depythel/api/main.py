@@ -48,7 +48,9 @@ from depythel._typing_imports import DictType
 # Standard tree e.g. {'a': 'b', 'b': 'a'}
 # A descriptive tree might show dependency type e.g. runtime/build
 StandardTree = DictType[str, str]  # pylint: disable=unsubscriptable-object
-DescriptiveTree = DictType[str, DictType[str, str]]  # pylint: disable=unsubscriptable-object
+DescriptiveTree = DictType[
+    str, DictType[str, str]
+]  # pylint: disable=unsubscriptable-object
 AnyTree = Union[StandardTree, DescriptiveTree]
 
 
@@ -229,3 +231,28 @@ libcxx, libomp, libunwind-headers, libuv, libxml2, llvm-10, llvm-9.0, ncurses, p
         # Sorted for reproducibility of tests
         print(f"Unfinished children in tree: {', '.join(sorted(unfinished))}")
     return return_value
+
+
+# TODO: Improve short description
+# TODO: Improve optional dependency management
+def visualise(tree: AnyTree) -> None:
+    """Visualise a dependency tree.
+
+    This requires depythel[visual] or networkx to be installed.
+    """
+    # TODO: Figure out how to do this without networkx
+    import networkx as nx
+    from pyvis.network import Network
+
+    # The root node should be the first item in the dictionary
+    root_node = tuple(tree.keys())[0]
+
+    graph = nx.DiGraph(tree)  # Use digraph instead of tree in case of cycles
+    graph.nodes[root_node]["title"] = "Root Node"
+    graph.nodes[root_node][
+        "group"
+    ] = 2  # Default colour is 1, set different colour for root node
+
+    nt = Network()
+    nt.from_nx(graph)
+    nt.show("basic.html")
