@@ -63,7 +63,7 @@ tool for you.
 System Package Managers
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Virtually all mature package managers generally provide some form of dependency conflict management. They are then able
+Virtually all mature package managers provide some form of dependency conflict management. They are then able
 to warn you as the user why it was not able to install a program.
 
 depythel aims instead to be a tool predominantly for developers, rather than the end user. As such, it's built in such
@@ -98,9 +98,9 @@ Features of proposed solution / Requirements specification
     * Modular language support is not only important as a USP for depythel, but also since Dependency Hell can happen
       in any language.
 
-    Dependency hell is not technology specific either. I've run into it in the Ruby/Rails ecosystem, in the Clojure
+    "Dependency hell is not technology specific either. I've run into it in the Ruby/Rails ecosystem, in the Clojure
     ecosystem, and in the NodeJS ecosystem. I know folks who have run into it in C++ and Python, too. You name the \
-    language, operating system, framework...it's going to happen.
+    language, operating system, framework...it's going to happen."
 
     -- `John Bintz, Software Engineer at Tidelift
     <https://dev.to/tidelift/dependency-hell-is-inevitable-and-that-s-ok-and-you-re-ok-too-5594>`_
@@ -145,6 +145,9 @@ Features of proposed solution / Requirements specification
 
     * This might be in the form of parsable JSON output (or some other format). The added benefit of this is that the
       end user can then use the data more efficiently compared to an image.
+
+    * For the CLT, where the end users are less experienced, an interactive tree might be a more beneficial form of
+      visualisation.
 
     * To be a success, there should be at least two forms of possible output available, so as to give the users choice.
 

@@ -34,6 +34,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
+    "sphinx_click",
     "sphinx.ext.autosectionlabel",
 ]
 autosummary_generate = True
