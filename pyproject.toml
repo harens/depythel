@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "depythel"
-version = "0.0.0-alpha.0"
+version = "0.1.0"
 description = "Interdependency Visualiser and Dependency Hell scrutiniser"
 authors = ["harens <harensdeveloper@gmail.com>"]
 license = "GPL-3.0-or-later"
@@ -9,10 +9,13 @@ license = "GPL-3.0-or-later"
 python = "^3.8"
 pyvis = {version = "^0.1.9", optional = true}
 networkx = {version = "^2.6.3", optional = true}
+click = {version = "^8.0.3", optional = true}
+rich = {version = "^11.0.0", optional = true}
+beartype = {version = "^0.9.1", optional = true}
 
 
 [tool.poetry.extras]
-visual = ["pyvis", "networkx"]
+clt = ["pyvis", "networkx", "click", "rich", "beartype"]
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
@@ -27,11 +30,18 @@ sphinx-autobuild = "^2021.3.14"
 types-toml = "^0.10.1"
 pytest-mock = "^3.6.1"
 pylint = "^2.12.2"
+sphinx-click = "^3.0.2"
+
+[tool.poetry.scripts]
+depythel = "depythel.clt.main:depythel"
 
 # See https://pycqa.github.io/isort/docs/configuration/black_compatibility.html
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[tool.mypy]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 
 [tool.coverage.run]
 branch = true
