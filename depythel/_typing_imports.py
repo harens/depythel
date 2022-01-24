@@ -36,6 +36,7 @@ The main fix is dealing with aspects of the typing module being depreciated.
 # Please keep types in alphabetical order. Thanks.
 
 import sys
+from typing import Union
 
 # TODO: For some reason, it wants the type parameters with tuple
 # error: Missing type parameters for generic type "tuple"
@@ -53,3 +54,11 @@ else:  # pragma: no cover
 
     CacheType = lru_cache(maxsize=None)
     DictType = Dict
+
+# Standard tree e.g. {'a': 'b', 'b': 'a'}
+# A descriptive tree might show dependency type e.g. runtime/build
+StandardTree = DictType[str, str]  # pylint: disable=unsubscriptable-object
+DescriptiveTree = DictType[
+    str, DictType[str, str]
+]  # pylint: disable=unsubscriptable-object
+AnyTree = Union[StandardTree, DescriptiveTree]

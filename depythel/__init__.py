@@ -29,3 +29,13 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Interdependency Visualiser and Dependency Hell scrutiniser."""
+
+
+# Based on https://github.com/python-poetry/poetry/issues/144#issuecomment-623927302
+# This may or may not work. Neet to double check.
+from importlib.metadata import version
+
+try:
+    __version__ = version(__name__)
+except:
+    __version__ = "unknown"
