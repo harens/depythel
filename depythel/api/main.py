@@ -40,18 +40,10 @@
 
 import importlib
 import inspect
-from collections import deque
-from typing import Any, Callable, Optional, Union
+from collections import deque, Counter
+from typing import Any, Callable, Optional
 
-from depythel._typing_imports import DictType
-
-# Standard tree e.g. {'a': 'b', 'b': 'a'}
-# A descriptive tree might show dependency type e.g. runtime/build
-StandardTree = DictType[str, str]  # pylint: disable=unsubscriptable-object
-DescriptiveTree = DictType[
-    str, DictType[str, str]
-]  # pylint: disable=unsubscriptable-object
-AnyTree = Union[StandardTree, DescriptiveTree]
+from depythel._typing_imports import AnyTree
 
 
 def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
@@ -103,6 +95,10 @@ def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
         nonlocal stack, tree
         # pop turns this into depth first (via a stack)
         # popleft turns it info breadth first (via a queue)
+        if len(stack) == 0:
+            # This is when we're done. No more children left
+            # Maybe signal this somehow?
+            return tree
         next_child = stack.popleft()
         # We've checked to make sure that the attribute is defined
         children = module.online(next_child)  # type: ignore[attr-defined]
@@ -233,26 +229,16 @@ libcxx, libomp, libunwind-headers, libuv, libxml2, llvm-10, llvm-9.0, ncurses, p
     return return_value
 
 
-# TODO: Improve short description
-# TODO: Improve optional dependency management
-def visualise(tree: AnyTree) -> None:
-    """Visualise a dependency tree.
+# See https://courses.cs.washington.edu/courses/cse326/03wi/lectures/RaoLect20.pdf page 7
+# in degree is the number of times it appears in tuple(tuple(i.keys()) for i in tree.values())
+# THIS IS INCOMPLETE
+def topological_sort(tree):
+    """Determines the order in which dependencies can be installed.
 
-    This requires depythel[visual] or networkx to be installed.
+    Args:
+        tree: A directed acyclic graph representing a dependency tree.
     """
-    # TODO: Figure out how to do this without networkx
-    import networkx as nx
-    from pyvis.network import Network
-
-    # The root node should be the first item in the dictionary
-    root_node = tuple(tree.keys())[0]
-
-    graph = nx.DiGraph(tree)  # Use digraph instead of tree in case of cycles
-    graph.nodes[root_node]["title"] = "Root Node"
-    graph.nodes[root_node][
-        "group"
-    ] = 2  # Default colour is 1, set different colour for root node
-
-    nt = Network()
-    nt.from_nx(graph)
-    nt.show("basic.html")
+    in_degrees_list = []  # Maybe change it from list to something more efficient
+    for dep in tree.values():
+        in_degrees_list.extend(tuple(dep.keys()))
+    in_degrees_count = Counter(in_degrees_list)
