@@ -28,13 +28,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Retrieves dependencies from MacPorts, a macOS package manager."""
-
-# TODO: How to speed up fetch request?
-# DOCS: Argument names were chosen to be consistent across different repos
+"""Retrieves dependencies from the AUR, the Arch Linux User Repository"""
 
 import json
 from urllib.request import urlopen
+from urllib.error import HTTPError
 
 from depythel._typing_imports import CacheType, DictType
 
@@ -46,45 +44,45 @@ from depythel._typing_imports import CacheType, DictType
 def online(
     name: str,
 ) -> DictType[str, str]:  # pylint: disable=unsubscriptable-object
-    """Retrieve the dependencies of NAME from the MacPorts API.
+    """Retrieves dependencies for NAME from the AUR web RPC interface.
 
-    Information is fetched from  https://ports.macports.org/api/v1/ports/NAME/.
+    Information is fetched from https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=NAME
 
-    Each dependency is broken down into the following categories
+    Each dependency is grouped into the following categories:
 
-    - build
-    - extract
-    - fetch
-    - lib
-    - run
+    - Depends
+    - MakeDepends
+    - OptDepends
+    - CheckDepends
 
     Args:
-       name: The name of the port to retrieve the dependencies for.
+       name: The name of the project to retrieve the dependencies for.
 
     Returns: A dictionary of build/run/etc. dependencies.
 
     Examples:
-        >>> from depythel.api.repository.macports import online
-        >>> online('gping')
-        {'cargo': 'build', 'clang-12': 'build'}
-        >>> online('py39-checkdigit')
-        {'clang-9.0': 'build', 'py39-setuptools': 'build', 'python39': 'lib'}
+        >>> from depythel.api.repository.aur import online
+        >>> online("rget")
+        {'rustup': 'MakeDepends'}
+        >>> online("gmp-hg")
+        {'gcc-libs': 'Depends', 'sh': 'Depends', 'mercurial': 'MakeDepends'}
+        >>> online("anaconda")
+        {}
     """
-    # The slash at the end is required, otherwise some ports return a 404
-    # response = requests.get(f"https://ports.macports.org/api/v1/ports/{portname}/")
-
-    # TODO: Maybe deal with HTTPError more nicely
-    with urlopen(f"https://ports.macports.org/api/v1/ports/{name}/") as api_response:
-        # Convert the HTTP request into standard JSON
+    url = f"https://aur.archlinux.org/rpc/?v=5&type=info&arg[]={name}"
+    with urlopen(url) as api_response:
         json_response = json.load(api_response)
 
-    # return {item["type"]: item["ports"] for item in response.json()["dependencies"]}
-    # "is not None" check since in rare occasions the result is null
-    # e.g. https://ports.macports.org/port/libgcc11/details/ for runtime dep
-    # TODO: What happens if a project has no dependencies?
+    if json_response["resultcount"] == 0:
+        raise HTTPError(url, 404, "Not Found", api_response.info(), None)
+
     return {
-        dep: item["type"]
-        for item in json_response["dependencies"]
-        for dep in item["ports"]
-        if dep is not None
+        dep: category
+        for category in (
+            "Depends",
+            "MakeDepends",
+            "OptDepends",
+            "CheckDepends",
+        )
+        for dep in json_response["results"][0].get(category, [])
     }
