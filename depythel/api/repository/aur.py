@@ -31,8 +31,8 @@
 """Retrieves dependencies from the AUR, the Arch Linux User Repository"""
 
 import json
-from urllib.request import urlopen
 from urllib.error import HTTPError
+from urllib.request import urlopen
 
 from depythel._typing_imports import CacheType, DictType
 

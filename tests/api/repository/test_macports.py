@@ -30,7 +30,6 @@
 
 """Tests retrieving dependencies from the MacPorts repository"""
 
-import pytest
 from pytest_mock import MockFixture
 
 from depythel.api.repository.macports import online
