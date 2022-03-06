@@ -16,7 +16,6 @@ click = "^8.0.3"
 rich = "^11.0.0"
 beartype = "^0.10.0"
 rich-click = "^0.1.2"
-toml = "^0.10.2"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
@@ -33,7 +32,6 @@ pytest-mock = "^3.6.1"
 pylint = "^2.12.2"
 sphinx-click = "^3.0.2"
 pytest-sugar = "^0.9.4"
-toml = "^0.10.2"
 
 [tool.poetry.scripts]
 depythel = "depythel_clt.main:depythel"
