@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
@@ -36,7 +36,7 @@
 import json
 from urllib.request import urlopen
 
-from depythel._typing_imports import CacheType, DictType
+from depythel._utility_imports import CacheType, DictType
 
 
 # pylint doesn't like the dicttype return type.

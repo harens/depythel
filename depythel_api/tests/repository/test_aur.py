@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
@@ -35,15 +35,15 @@ from urllib.error import HTTPError
 import pytest
 from pytest_mock import MockFixture
 
-from depythel.api.repository.aur import online
+from depythel.repository.aur import online
 
 
 def test_standard_response(session_mocker: MockFixture) -> None:
     """Standard Expected 200 response."""
 
-    session_mocker.patch("depythel.api.repository.aur.urlopen")
+    session_mocker.patch("depythel.repository.aur.urlopen")
     session_mocker.patch(
-        "depythel.api.repository.aur.json.load",
+        "depythel.repository.aur.json.load",
         return_value={
             "version": 5,
             "type": "multiinfo",
@@ -104,7 +104,7 @@ def test_standard_response(session_mocker: MockFixture) -> None:
 def test_invalid_response(session_mocker: MockFixture) -> None:
     """If the user's input isn't a valid project in the AUR."""
     session_mocker.patch(
-        "depythel.api.repository.aur.json.load",
+        "depythel.repository.aur.json.load",
         return_value={
             "version": 5,
             "type": "multiinfo",

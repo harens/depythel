@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
@@ -30,19 +30,25 @@
 
 """Tests functions related to generating the dependency tree."""
 
+from collections import deque
 from typing import Any, Optional
 
 import pytest
 from pytest_mock import MockFixture
 
-from depythel.api.main import cycle_check, retrieve_from_stack, tree_generator
+from depythel_api.depythel.main import (
+    cycle_check,
+    retrieve_from_stack,
+    topological_sort,
+    tree_generator,
+)
 
 
 class TestTreeGenerator:
     def test_standard_response(self, session_mocker: MockFixture) -> None:
         """Standard project."""
         session_mocker.patch(
-            "depythel.api.repository.macports.online",
+            "depythel.repository.macports.online",
             return_value={"cargo": "build", "clang-12": "build"},
         )
         gping_generator = tree_generator("gping", "macports")
@@ -53,10 +59,23 @@ class TestTreeGenerator:
         with pytest.raises(ModuleNotFoundError):
             tree_generator("gping", "I_dont_exist")
 
+    def test_no_deps(self, session_mocker: MockFixture) -> None:
+        """If the project contains no dependencies"""
+        session_mocker.patch(
+            "depythel.repository.homebrew.online",
+            return_value={},
+        )
+        pkg_config_generator = tree_generator("pkg-config", "homebrew")
+
+        # After two runs, the function should check the children
+        # and realise there aren't any.
+        assert pkg_config_generator() == {"pkg-config": {}}
+        assert pkg_config_generator() == {"pkg-config": {}}
+
     def test_no_online_support(self, session_mocker: MockFixture) -> None:
         """If, for whatever reason, online support isn't available."""
         # TODO: Test if the return value is none if the online module doesn't exist.
-        session_mocker.patch("depythel.api.main.getattr", return_value=None)
+        session_mocker.patch("depythel.main.getattr", return_value=None)
         with pytest.raises(AttributeError):
             # The repo has to exist to pass the invalid repo test first.
             tree_generator("gping", "macports")
@@ -64,18 +83,18 @@ class TestTreeGenerator:
 
 def test_retrieve_from_stack() -> None:
     """Test retrieving the contents of variables from the stack."""
-    ### Test Program
+    # Test Program
     a = 2
 
     def demo() -> Optional[Any]:
         a = 1
         return retrieve_from_stack("a")
 
-    ###
+    #
 
     assert demo() == 1
     assert retrieve_from_stack("a") == 2
-    assert retrieve_from_stack("doesnt-exist") == None
+    assert retrieve_from_stack("doesnt-exist") is None
 
 
 class TestCycleCheck:
@@ -90,3 +109,24 @@ class TestCycleCheck:
     def test_no_cycle(self) -> None:
         """Simple no cycles present."""
         assert not cycle_check("a", {"a": "b", "b": "c"})
+
+
+# N.B. Topological sorting isn't necessarily reproducible.
+# This is since there can be many valid solutions.
+# Testcases should be used with only one possible solution to reflect this.
+class TestTopologicalSort:
+    def test_simple_standard(self) -> None:
+        """Standard non-descriptive tree."""
+        assert topological_sort({"a": "b", "b": "c"}) == deque(["c", "b", "a"])
+
+    def test_unfinished_descriptive(self) -> None:
+        """Descriptive tree that isn't complete."""
+        # c doesn't have a definition.
+        assert topological_sort(
+            {"a": {"b": "hi", "c": "bye"}, "b": {"c": "hello"}}
+        ) == deque(["c", "b", "a"])
+
+    def test_cycle(self) -> None:
+        """Tree that contains cycle => Topological sorting not possible."""
+        with pytest.raises(StopIteration):
+            topological_sort({"a": "b", "b": "a"})

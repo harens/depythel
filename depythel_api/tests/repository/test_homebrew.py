@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
@@ -32,15 +32,15 @@
 
 from pytest_mock import MockFixture
 
-from depythel.api.repository.homebrew import online
+from depythel.repository.homebrew import online
 
 
 def test_standard_response(session_mocker: MockFixture) -> None:
     """Standard Expected 200 response."""
 
-    session_mocker.patch("depythel.api.repository.homebrew.urlopen")
+    session_mocker.patch("depythel.repository.homebrew.urlopen")
     session_mocker.patch(
-        "depythel.api.repository.homebrew.json.load",
+        "depythel.repository.homebrew.json.load",
         return_value={
             "name": "gping",
             "full_name": "gping",

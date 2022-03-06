@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
@@ -28,61 +28,56 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Retrieves dependencies from the AUR, the Arch Linux User Repository"""
+"""Retrieves dependencies from Homebrew, a macOS package manager."""
 
 import json
-from urllib.error import HTTPError
 from urllib.request import urlopen
 
-from depythel._typing_imports import CacheType, DictType
+from depythel._utility_imports import CacheType, DictType
 
 
 # pylint doesn't like the dicttype return type.
 # TODO: might be nice to have the dictionary quotations be double quotes
-# This allows compatability with JSON
+# This allows compatibility with JSON
 @CacheType
 def online(
     name: str,
 ) -> DictType[str, str]:  # pylint: disable=unsubscriptable-object
-    """Retrieves dependencies for NAME from the AUR web RPC interface.
+    """Retrieves dependencies for NAME from the Homebrew API.
 
-    Information is fetched from https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=NAME
+    Information is fetched from https://formulae.brew.sh/api/formula/NAME.json.
 
     Each dependency is grouped into the following categories:
 
-    - Depends
-    - MakeDepends
-    - OptDepends
-    - CheckDepends
+    - build_dependencies
+    - dependencies (required at build and runtime)
+    - optional_dependencies
+    - recommended_dependencies
 
     Args:
-       name: The name of the project to retrieve the dependencies for.
+       name: The name of the formula to retrieve the dependencies for.
 
     Returns: A dictionary of build/run/etc. dependencies.
 
     Examples:
-        >>> from depythel.api.repository.aur import online
-        >>> online("rget")
-        {'rustup': 'MakeDepends'}
-        >>> online("gmp-hg")
-        {'gcc-libs': 'Depends', 'sh': 'Depends', 'mercurial': 'MakeDepends'}
-        >>> online("anaconda")
+        >>> from depythel.api.repository.homebrew import online
+        >>> online("folderify")
+        {'imagemagick': 'dependencies', 'python@3.9': 'dependencies'}
+        >>> online("gping")
+        {'rust': 'build_dependencies'}
+        >>> online("pkg-config")
         {}
     """
-    url = f"https://aur.archlinux.org/rpc/?v=5&type=info&arg[]={name}"
-    with urlopen(url) as api_response:
+    with urlopen(f"https://formulae.brew.sh/api/formula/{name}.json") as api_response:
         json_response = json.load(api_response)
-
-    if json_response["resultcount"] == 0:
-        raise HTTPError(url, 404, "Not Found", api_response.info(), None)
 
     return {
         dep: category
         for category in (
-            "Depends",
-            "MakeDepends",
-            "OptDepends",
-            "CheckDepends",
+            "dependencies",
+            "recommended_dependencies",
+            "optional_dependencies",
+            "build_dependencies",
         )
-        for dep in json_response["results"][0].get(category, [])
+        for dep in json_response[category]
     }

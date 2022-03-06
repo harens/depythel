@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
@@ -28,36 +28,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Tests retrieving dependencies from the MacPorts repository"""
+"""API for depythel."""
 
-from pytest_mock import MockFixture
-
-from depythel.api.repository.macports import online
-
-
-def test_standard_response(session_mocker: MockFixture) -> None:
-    """Standard Expected 200 response."""
-
-    session_mocker.patch("depythel.api.repository.macports.urlopen")
-    session_mocker.patch(
-        "depythel.api.repository.macports.json.load",
-        return_value={
-            "name": "gping",
-            "portdir": "net/gping",
-            "version": "1.2.3",
-            "license": "MIT",
-            "platforms": "darwin",
-            "epoch": 0,
-            "replaced_by": None,
-            "homepage": "https://github.com/orf/gping",
-            "description": "ping, but with a graph",
-            "long_description": "ping, but with a graph.",
-            "active": True,
-            "categories": ["net"],
-            "maintainers": [{"name": "harens", "github": "harens", "ports_count": 11}],
-            "variants": ["universal"],
-            "dependencies": [{"type": "build", "ports": ["cargo", "clang-12"]}],
-            "depends_on": [],
-        },
-    )
-    assert online("gping") == {"cargo": "build", "clang-12": "build"}
+__version__ = "0.1.0"

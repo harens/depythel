@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
@@ -28,37 +28,4 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Deals with built-in library API changes between different Python versions.
-
-The main fix is dealing with aspects of the typing module being depreciated.
-"""
-
-# Please keep types in alphabetical order. Thanks.
-
-import sys
-from typing import Union
-
-# TODO: For some reason, it wants the type parameters with tuple
-# error: Missing type parameters for generic type "tuple"
-
-# Don't count code coverage since different python versions
-# won't run different parts of code
-if sys.version_info >= (3, 9):  # pragma: no cover
-    from functools import cache
-
-    CacheType = cache
-    DictType = dict
-else:  # pragma: no cover
-    from functools import lru_cache
-    from typing import Dict
-
-    CacheType = lru_cache(maxsize=None)
-    DictType = Dict
-
-# Standard tree e.g. {'a': 'b', 'b': 'a'}
-# A descriptive tree might show dependency type e.g. runtime/build
-StandardTree = DictType[str, str]  # pylint: disable=unsubscriptable-object
-DescriptiveTree = DictType[
-    str, DictType[str, str]
-]  # pylint: disable=unsubscriptable-object
-AnyTree = Union[StandardTree, DescriptiveTree]
+"""Modules related to fetching information from package managers."""
