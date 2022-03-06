@@ -51,6 +51,11 @@ and drawbacks:
 Poetry
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+.. figure:: art/poetry-logo.jpg
+  :width: 70
+  :align: right
+  :alt: Poetry package manager logo
+
 `Poetry <https://python-poetry.org/>`_ is a Python package manager, which depythel ironically uses itself behind the
 scenes (since it is amazing!). If there exists a solution to a dependency conflict, it will find it. In this regard, it
 is a much more stable and polished tool than depythel.
