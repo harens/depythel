@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
