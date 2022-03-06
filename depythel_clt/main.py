@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021, harens
+# Copyright (c) 2021-2022, Haren Samarasinghe
 #
 # All rights reserved.
 #
@@ -32,6 +32,7 @@
 # networkx.classes used to make mypy happy
 
 import ast
+import logging
 from typing import Any, Optional
 
 import click
@@ -40,16 +41,28 @@ from beartype import beartype
 from networkx.classes.digraph import DiGraph
 from pyvis.network import Network
 from rich.progress import Progress
-from rich.traceback import install
+import rich_click
 
 from depythel import __version__
-from depythel._typing_imports import AnyTree
-from depythel.api.main import tree_generator
+from depythel_api.depythel._utility_imports import AnyTree
+from depythel_api.depythel.main import tree_generator, topological_sort
 
-install(suppress=[click])
+log = logging.getLogger(__name__)
 
 
-@click.group()
+# From https://github.com/ewels/rich-click#the-good-and-proper-way
+# Used for formatting click help output with rich
+class RichClickGroup(click.Group):
+    def format_help(self, ctx, formatter):
+        rich_click.rich_format_help(self, ctx, formatter)
+
+
+class RichClickCommand(click.Command):
+    def format_help(self, ctx, formatter):
+        rich_click.rich_format_help(self, ctx, formatter)
+
+
+@click.group(cls=RichClickGroup)
 @click.version_option(__version__)
 def depythel() -> None:
     """Interdependency Visualiser and Dependency Hell scrutiniser."""
@@ -112,7 +125,7 @@ def support_pipe(
     "path",
     type=click.Path(dir_okay=False, writable=True),
 )
-@depythel.command()
+@depythel.command(cls=RichClickCommand)
 @beartype
 def visualise(path: str, tree: AnyTree) -> None:
     """Generates an html file visualising a dependency graph.
@@ -138,13 +151,20 @@ def visualise(path: str, tree: AnyTree) -> None:
     click.launch(path, locate=True)
 
 
+@click.argument("tree", callback=support_pipe, required=False, type=TREE_TYPE)
+@depythel.command(cls=RichClickCommand)
+@beartype
+def topological(tree: AnyTree) -> None:
+    topological_sort(tree)
+
+
 # TODO: Figure out how to deal with invalid project name.
 # Might be better to deal with at the API level first.
 # click.secho("👀 Cannot find project", fg="red", err=True)
 @click.argument("number", type=int)
 @click.argument("repository")
 @click.argument("name")
-@depythel.command()
+@depythel.command(cls=RichClickCommand)
 @beartype
 def generate(name: str, repository: str, number: int) -> None:
     """Outputs a dependency tree in JSON format.
