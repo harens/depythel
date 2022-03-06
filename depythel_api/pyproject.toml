@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "depythel-api"
+version = "0.1.0"
+description = "Library for Interdependency Visualiser and Dependency Hell scrutiniser"
+authors = ["harens <harensdeveloper@gmail.com>"]
+license = "GPL-3.0-or-later"
+readme = "README.rst"
+packages = [{include = "depythel"}]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
