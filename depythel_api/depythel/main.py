@@ -44,7 +44,7 @@ import logging
 from collections import deque
 from typing import Any, Callable, Optional, cast
 
-from depythel_api.depythel._utility_imports import (
+from depythel._utility_imports import (
     AnyTree,
     DequeType,
     DescriptiveTree,
@@ -124,7 +124,7 @@ def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
     return get_next_child
 
 
-def retrieve_from_stack(variable: str) -> Optional[Any]:
+def _retrieve_from_stack(variable: str) -> Optional[Any]:
     """Private function to retrieve a local variable from the recursion stack.
 
     This means that it doesn't have to be passed as an argument.
@@ -137,14 +137,14 @@ def retrieve_from_stack(variable: str) -> Optional[Any]:
         The value of the variable.
 
     Examples:
-        >>> from depythel.api.main import retrieve_from_stack
+        >>> from depythel.api.main import _retrieve_from_stack
         >>> a = 2
         >>> def demo():
         ...     a = 1
-        ...     return retrieve_from_stack('a')
+        ...     return _retrieve_from_stack('a')
         >>> demo()
         1
-        >>> retrieve_from_stack('a')
+        >>> _retrieve_from_stack('a')
         2
     """
     frame = inspect.currentframe()
@@ -182,8 +182,8 @@ def cycle_check(root: str, tree: AnyTree, first: bool = False) -> bool:
     return_value = False
     start_call = False
 
-    exploring = retrieve_from_stack("exploring")
-    unfinished = retrieve_from_stack("unfinished")
+    exploring = _retrieve_from_stack("exploring")
+    unfinished = _retrieve_from_stack("unfinished")
 
     # If the exploring list isn't defined, add the root node
     # Else, add the current child to the exploring list

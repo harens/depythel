@@ -36,9 +36,9 @@ from typing import Any, Optional
 import pytest
 from pytest_mock import MockFixture
 
-from depythel_api.depythel.main import (
+from depythel.main import (
     cycle_check,
-    retrieve_from_stack,
+    _retrieve_from_stack,
     topological_sort,
     tree_generator,
 )
@@ -88,13 +88,13 @@ def test_retrieve_from_stack() -> None:
 
     def demo() -> Optional[Any]:
         a = 1
-        return retrieve_from_stack("a")
+        return _retrieve_from_stack("a")
 
     #
 
     assert demo() == 1
-    assert retrieve_from_stack("a") == 2
-    assert retrieve_from_stack("doesnt-exist") is None
+    assert _retrieve_from_stack("a") == 2
+    assert _retrieve_from_stack("doesnt-exist") is None
 
 
 class TestCycleCheck:
