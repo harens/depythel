@@ -261,11 +261,11 @@ jupyter = [ "ipywidgets (>=7.5.1,<8.0.0)"]
 
 [[package]]
 name = "rich-click"
-version = "0.1.2"
+version = "1.2.1"
 description = "Format click help output nicely with rich"
 optional = false
 python-versions = ">=3.6"
-dependencies = {click = "*", rich = "*"}
+dependencies = {click = ">=7", rich = ">=10"}
 
 [[package]]
 name = "setuptools"
@@ -317,7 +317,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "833977c72b2fd257cc3e5abf462b9bb10a6444e12e6679782625f094998c85c3"
+content-hash = "730e3cb6b28c00903210359e0ed9c26d4f5f8fc9e4b20358b3dff23fa6f75028"
 
 [metadata.files]
 depythel-api = []
@@ -675,12 +675,12 @@ file = "rich-11.2.0.tar.gz"
 hash = "sha256:1a6266a5738115017bb64a66c59c717e7aa047b3ae49a011ede4abdeffc6536e"
 
 [[metadata.files.rich-click]]
-file = "rich-click-0.1.2.tar.gz"
-hash = "sha256:d5e298c506d0b7c623e2dbbb51c06c01bd77a30d8705aa3227d7f09ed43010de"
+file = "rich-click-1.2.1.tar.gz"
+hash = "sha256:43edaf6f89d9597e992040a56ac7f9236952d3e8c2df47db88115bc304005dff"
 
 [[metadata.files.rich-click]]
-file = "rich_click-0.1.2-py3-none-any.whl"
-hash = "sha256:a91fc2760b0238fc4c84f5009ea706a7b093824f0e78db27f6511a018850d130"
+file = "rich_click-1.2.1-py3-none-any.whl"
+hash = "sha256:bd93b1d418241b71272dac70c45bc1ddf7a3d12c550d918407e1ba3f8906f123"
 
 [[metadata.files.setuptools]]
 file = "setuptools-60.9.3-py3-none-any.whl"

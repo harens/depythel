@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Library for Interdependency Visualiser and Dependency Hell scrutiniser"
 authors = ["harens <harensdeveloper@gmail.com>"]
 license = "GPL-3.0-or-later"
+include = ["depythel/py.typed"]
 readme = "README.rst"
 packages = [{include = "depythel"}]
 
