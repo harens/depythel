@@ -27,6 +27,9 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""General helper functions for managing the Click CLT."""
+
 import ast
 import logging
 import os.path
@@ -35,8 +38,9 @@ from typing import Any, Optional
 
 import click
 from beartype import beartype
-from click import Context, Argument
-from depythel import repository as repository
+from click import Argument, Context
+
+from depythel import repository
 from depythel._utility_imports import ListType
 
 log = logging.getLogger(__name__)
@@ -62,6 +66,7 @@ class TreeType(click.ParamType):
     Based on https://click.palletsprojects.com/en/8.0.x/parameters/#implementing-custom-types
     """
 
+    # N.B. This intentionally overrides the standard name attribute and convert method.
     name = "tree"
 
     @beartype

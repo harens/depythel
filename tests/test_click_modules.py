@@ -28,9 +28,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from depythel_clt._click_modules import repository_complete, TREE_TYPE
-from click import Context, Argument, Command, exceptions
 import pytest
+from click import Argument, Command, Context, exceptions
+
+from depythel_clt._click_modules import TREE_TYPE, repository_complete
 
 
 # N.B. The results of these tests could change if more modules are added.
@@ -58,4 +59,4 @@ def test_tree_conversion() -> None:
     assert TREE_TYPE.convert('{"a": "b", "b": "a"}', None, None) == {"a": "b", "b": "a"}
     assert TREE_TYPE.convert("{'a': 'b', 'b': 'a'}", None, None) == {"a": "b", "b": "a"}
     with pytest.raises(exceptions.BadParameter):
-        TREE_TYPE.convert('not a valid tree', None, None)
+        TREE_TYPE.convert("not a valid tree", None, None)

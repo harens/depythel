@@ -56,7 +56,7 @@ show_missing = true
 
 # TODO: Remove before production
 [tool.pylint.messages_control]
-disable = ["fixme"]
+disable = ["fixme", "logging-fstring-interpolation"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

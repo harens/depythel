@@ -28,12 +28,14 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
+import pathlib
+
 from click.testing import CliRunner
+from pytest_mock import MockFixture
+
 from depythel_clt import __version__
 from depythel_clt.main import depythel
-import pathlib
-import os
-from pytest_mock import MockFixture
 
 
 def test_version() -> None:

@@ -28,13 +28,15 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""The main functionallity behind the depythel CLT."""
+
 # N.B. could instead be "from networkx import DiGraph"
 # networkx.classes used to make mypy happy
 
 import logging
 
-import rich_click as click
 import rich
+import rich_click as click
 from beartype import beartype
 from networkx.classes.digraph import DiGraph
 from pyvis.network import Network
@@ -42,9 +44,8 @@ from rich.progress import Progress
 
 from depythel import __version__
 from depythel._utility_imports import AnyTree
-from depythel.main import tree_generator, topological_sort, cycle_check
-
-from depythel_clt._click_modules import repository_complete, support_pipe, TREE_TYPE
+from depythel.main import cycle_check, topological_sort, tree_generator
+from depythel_clt._click_modules import TREE_TYPE, repository_complete, support_pipe
 
 log = logging.getLogger(__name__)
 

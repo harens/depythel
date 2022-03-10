@@ -37,8 +37,8 @@ import pytest
 from pytest_mock import MockFixture
 
 from depythel.main import (
-    cycle_check,
     _retrieve_from_stack,
+    cycle_check,
     topological_sort,
     tree_generator,
 )

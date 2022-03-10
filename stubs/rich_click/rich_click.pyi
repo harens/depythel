@@ -1,6 +1,7 @@
+from typing import Any
+
 import click
 from rich.highlighter import RegexHighlighter
-from typing import Any
 
 STYLE_OPTION: str
 STYLE_SWITCH: str

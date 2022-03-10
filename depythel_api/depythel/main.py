@@ -31,7 +31,6 @@
 """Generates and traverses dependency tress of various projects."""
 
 # TODO: Sort out if online, if offline
-# TODO: Allow for other repositories (not just MacPorts)
 # TODO: Test docstrings
 # TODO: At some point, refactor off the module checking
 # TODO: When retrieving from stack, make sure the variable isn't one with the same name
@@ -336,10 +335,10 @@ def topological_sort(tree: AnyTree) -> DequeType[str]:
     while dep_count:
         try:
             # Choose item if it has no dependencies
-            to_remove = next(item for item in dep_count if dep_count[item] == 0)
+            to_remove = next(item[0] for item in dep_count.items() if item[1] == 0)
             log.debug(f"{to_remove} next item in ordering")
         except StopIteration:
-            log.error(f"Cycle present - No topological ordering present", exc_info=True)
+            log.error("Cycle present - No topological ordering present", exc_info=True)
             raise
         final_ordering.append(to_remove)
         # Decrement dep count of dependents of to_remove
