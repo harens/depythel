@@ -31,9 +31,7 @@
 # N.B. could instead be "from networkx import DiGraph"
 # networkx.classes used to make mypy happy
 
-import ast
 import logging
-from typing import Any, Optional
 
 import rich_click as click
 import rich
@@ -43,14 +41,12 @@ from pyvis.network import Network
 from rich.progress import Progress
 
 from depythel import __version__
-from depythel_api.depythel._utility_imports import AnyTree
-from depythel_api.depythel.main import tree_generator, topological_sort
+from depythel._utility_imports import AnyTree
+from depythel.main import tree_generator, topological_sort, cycle_check
+
+from depythel_clt._click_modules import repository_complete, support_pipe, TREE_TYPE
 
 log = logging.getLogger(__name__)
-
-
-
-
 
 
 @click.group()
@@ -59,58 +55,8 @@ def depythel() -> None:
     """Interdependency Visualiser and Dependency Hell scrutiniser."""
 
 
-# TODO: Allow passing in a json file containing the tree
-# TODO: Figure out how to allow double quotes on the outside
-class TreeType(click.ParamType):
-    """Parses the user's tree from the command line.
-
-    e.g. Turns an input of '{"a": "b", "b": "a"}' into {"a": "b", "b": "a"}
-
-    Based on https://click.palletsprojects.com/en/8.0.x/parameters/#implementing-custom-types
-    """
-
-    name = "tree"
-
-    @beartype
-    def convert(
-        self,
-        value: str,
-        param: Optional[click.core.Parameter],
-        ctx: Optional[click.core.Context],
-    ) -> Any:
-        """Parses the user's string into a dictionary, and errors out if it's not possible."""
-        try:
-            return ast.literal_eval(value)
-        # TODO: Check if other errors can be raised
-        except ValueError:
-            self.fail(
-                f"{value} is an invalid tree.",
-                param,
-                ctx,
-            )
-
-
-TREE_TYPE = TreeType()
-
-
-@beartype
-def support_pipe(
-    ctx: Optional[click.core.Context], param: Optional[click.core.Parameter], value: Any
-) -> Any:
-    """This allows the depythel function to support piping input."""
-    # Based on https://github.com/pallets/click/issues/1370#issuecomment-522549260
-    if not value and not click.get_text_stream("stdin").isatty():
-        # Piped input (and maybe stdin input)
-        user_input = click.get_text_stream("stdin").read().strip()
-        if param is not None and param.human_readable_name == "TREE":
-            return TREE_TYPE.convert(user_input, None, None)
-        return user_input
-    # No input provided
-    # TODO: Are there other ways to reach this?
-    return value
-
-
 # TODO: Improve optional dependency management
+# TODO: Set size of graph to the whole window
 @click.argument("tree", callback=support_pipe, required=False, type=TREE_TYPE)
 @click.argument(
     "path",
@@ -146,14 +92,30 @@ def visualise(path: str, tree: AnyTree) -> None:
 @depythel.command()
 @beartype
 def topological(tree: AnyTree) -> None:
-    topological_sort(tree)
+    """Determines an order in which dependencies can be installed.
+
+    TREE is a directed acyclic graph representing a dependency tree.
+
+    """
+    for item in topological_sort(tree):
+        click.echo(item)
+
+
+# TODO: Maybe error if cycle present?
+@click.argument("tree", callback=support_pipe, required=False, type=TREE_TYPE)
+@click.argument("root")
+@depythel.command()
+@beartype
+def cycle(root: str, tree: AnyTree) -> None:
+    """Perform a level-order traversal of TREE looking for any cycles."""
+    click.echo(cycle_check(root, tree))
 
 
 # TODO: Figure out how to deal with invalid project name.
 # Might be better to deal with at the API level first.
 # click.secho("👀 Cannot find project", fg="red", err=True)
 @click.argument("number", type=int)
-@click.argument("repository")
+@click.argument("repository", shell_complete=repository_complete)
 @click.argument("name")
 @depythel.command()
 @beartype
