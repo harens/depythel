@@ -31,6 +31,9 @@
 from click.testing import CliRunner
 from depythel_clt import __version__
 from depythel_clt.main import depythel
+import pathlib
+import os
+from pytest_mock import MockFixture
 
 
 def test_version() -> None:
@@ -49,11 +52,23 @@ def test_help() -> None:
     assert "Usage: depythel" in result.output
 
 
-def test_visualise() -> None:
-    """Visualising a dependency tree."""
+def test_visualise(tmp_path: pathlib.Path, session_mocker: MockFixture) -> None:
+    """Checks for the existence of an html file following the visualisation command."""
     runner = CliRunner()
-    with runner.isolated_filesystem(temp_dir=tmp_path) as td:
-        result = runner.invoke(depythel, ["visualise", ""])
+
+    # Don't show the path of the temporary file in the file explorer.
+    session_mocker.patch(
+        "depythel_clt.main.click.launch",
+        return_value=None,
+    )
+
+    with runner.isolated_filesystem(temp_dir=tmp_path) as directory:
+        result = runner.invoke(
+            depythel, ["visualise", f"{directory}/tree.html", "{'a': 'b'}"]
+        )
+        assert result.exit_code == 0
+        assert os.path.exists(f"{directory}/tree.html")
+
 
 class TestTopologicalSort:
     def test_standard(self) -> None:
@@ -61,8 +76,7 @@ class TestTopologicalSort:
         runner = CliRunner()
         result = runner.invoke(depythel, ["topological", "{'a': 'b', 'b': 'c'}"])
         assert result.exit_code == 0
-        # c followed by b then a
-        assert result.output == "c\nb\na\n"
+        assert result.output.replace("\n", "") == "cba"
 
     def test_cycle(self) -> None:
         """Cycle present in tree - No topological sorting possible."""
@@ -73,11 +87,36 @@ class TestTopologicalSort:
 
 class TestCycleCheck:
     def test_no_cycle(self) -> None:
+        """Tests no cycle output from depythel cycle."""
         runner = CliRunner()
         result = runner.invoke(depythel, ["cycle", "a", "{'a': 'b', 'b': 'c'}"])
-        assert result.output == "False\n"
+        assert result.output.strip() == "False"
 
     def test_cycle(self) -> None:
+        """Tests the output of depythel cycle when there is a cycle present."""
         runner = CliRunner()
         result = runner.invoke(depythel, ["cycle", "a", "{'a': 'b', 'b': 'a'}"])
-        assert result.output == "True\n"
+        assert result.output.strip() == "True"
+
+
+def test_generator(session_mocker: MockFixture) -> None:
+    # Had issues with "doesn't support retrieving deps from online" from another mock
+    session_mocker.stopall()
+    # On the first call, the deps for gping is returned (i.e. rust)
+    # on the second call, the deps for rust are returned
+    session_mocker.patch(
+        "depythel.repository.homebrew.online",
+        side_effect=(
+            {"rust": "build_dependencies"},
+            {"libssh2": "dependencies", "openssl@1.1": "dependencies"},
+        ),
+    )
+    runner = CliRunner()
+    result = runner.invoke(depythel, ["generate", "gping", "homebrew", "2"])
+    assert result.exit_code == 0
+    # Remove all newlines and spaces via split and join
+    # Based on https://www.adamsmith.haus/python/answers/how-to-remove-spaces,-tabs,-and-newlines-in-a-string-in-python
+    assert (
+        "".join(result.output.split())
+        == '{"gping":{"rust":"build_dependencies"},"rust":{"libssh2":"dependencies","openssl@1.1":"dependencies"}}'
+    )

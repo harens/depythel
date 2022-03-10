@@ -29,7 +29,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from depythel_clt._click_modules import repository_complete, TREE_TYPE
-from click import Context, Argument, Command
+from click import Context, Argument, Command, exceptions
+import pytest
 
 
 # N.B. The results of these tests could change if more modules are added.
@@ -37,16 +38,24 @@ from click import Context, Argument, Command
 class TestRepositoryComplete:
     def test_homebrew(self) -> None:
         """Provide autocomplete suggestions for homebrew."""
-        assert repository_complete(Context(Command('something')), Argument(['something']), 'brew') == ['homebrew']
-        assert repository_complete(Context(Command('something')), Argument(['something']), 'home') == ['homebrew']
+        assert repository_complete(
+            Context(Command("something")), Argument(["something"]), "brew"
+        ) == ["homebrew"]
+        assert repository_complete(
+            Context(Command("something")), Argument(["something"]), "home"
+        ) == ["homebrew"]
 
     def test_aur(self) -> None:
         """Provide autocomplete suggestions for the AUR."""
-        assert repository_complete(Context(Command('something')), Argument(['something']), 'au') == ['aur']
+        assert repository_complete(
+            Context(Command("something")), Argument(["something"]), "au"
+        ) == ["aur"]
 
 
 def test_tree_conversion() -> None:
     """Test converting the terminal input of a tree in a string into a tree."""
     # Notice the apostrophes of the tree.
-    assert TREE_TYPE.convert('{"a": "b", "b": "a"}', None, None) == {'a': 'b', 'b': 'a'}
-    assert TREE_TYPE.convert("{'a': 'b', 'b': 'a'}", None, None) == {'a': 'b', 'b': 'a'}
+    assert TREE_TYPE.convert('{"a": "b", "b": "a"}', None, None) == {"a": "b", "b": "a"}
+    assert TREE_TYPE.convert("{'a': 'b', 'b': 'a'}", None, None) == {"a": "b", "b": "a"}
+    with pytest.raises(exceptions.BadParameter):
+        TREE_TYPE.convert('not a valid tree', None, None)
