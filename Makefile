@@ -1,7 +1,8 @@
 .PHONY: docs  # The docs directory already exists
 all: format test
 
-CMD:=poetry run python -m
+POETRY_CMD:=rp  # Relaxed poetry
+CMD:=$(POETRY_CMD) run python -m
 
 format: ## Runs black and isort
 	$(CMD) isort .
@@ -9,23 +10,29 @@ format: ## Runs black and isort
 
 test: pytest type-checking lint dependencies  ## Runs all available tests (pytest, type checking, etc.)
 
-# TODO: LOCATION = depythel/ tests/
-pytest:  ## Runs pytest on docstrings and the tests folder and outputs coverage.xml
-	$(CMD) pytest --cov-report=xml:coverage.xml --cov=depythel tests/
+pytest:  ## Runs pytest on the tests folder and outputs coverage.xml
+	$(CMD) pytest --cov-report=xml:coverage.xml --cov=depythel_api/depythel --cov=depythel_clt depythel_api/tests tests
+
+install-pytest:
+	$(CMD) pip install pytest pytest-cov pytest-mock
 
 type-checking:  ## Runs mypy --strict
-	$(CMD) mypy --strict .
+	$(CMD) mypy --strict depythel_api depythel_clt tests
+
+install-type-checking:  # pytest required for mypy of test files
+	$(CMD) pip install mypy pytest pytest-mock
 
 dependencies:  ## Verifies pyproject.toml file integrity
-	poetry check
+	$(POETRY_CMD) check
 	$(CMD) pip check
+
+install-dependencies:
+	@:
 
 lint:  ## Tests whether formatting meets standards
 	$(CMD) black --check .
 	$(CMD) isort --check-only .
 	$(CMD) pydocstyle --convention=google .
-	$(CMD) pylint depythel
 
-docs:  ## Continuously build the documentation using sphinx-autobuild
-	poetry run sphinx-autobuild docs/source docs/_build/html
-
+install-lint:
+	$(CMD) pip install black isort pydocstyle

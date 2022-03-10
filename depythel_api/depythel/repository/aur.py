@@ -28,7 +28,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Retrieves dependencies from the AUR, the Arch Linux User Repository"""
+"""Retrieves dependencies from the AUR, the Arch Linux User Repository."""
 
 import json
 from urllib.error import HTTPError

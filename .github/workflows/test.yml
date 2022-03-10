@@ -1,0 +1,54 @@
+# Based off https://github.com/Electrostatics/mmcif_pdbx/blob/master/.github/workflows/python-package.yml
+# Also credit to https://github.com/commitizen-tools/commitizen/tree/master/.github/workflows
+
+# MacPorts setup and coverage only required for pytest
+
+# We don't need these checks in both python versions
+# TODO: Add mypy only for python 3.9 (since different typing syntax)
+# pytype currently doesn't work in python 3.9
+
+name: Tests
+on: [push, pull_request]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+        test-area: [pytest, type-checking, dependencies, lint]
+        exclude:  # Dependencies and lint on 3.10, type-check and pytest all,
+          - python-version: 3.7
+            test-area: dependencies
+          - python-version: 3.8
+            test-area: dependencies
+          - python-version: 3.9
+            test-area: dependencies
+          - python-version: 3.7
+            test-area: lint
+          - python-version: 3.8
+            test-area: lint
+          - python-version: 3.9
+            test-area: lint
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install -U pip relaxed-poetry
+        make install-${{ matrix.test-area }}
+        rp --version
+        rp install
+    - name: Test ${{ matrix.test-area }}
+      run: make ${{ matrix.test-area }}
+    - name: Upload coverage to Codecov  # Again only required for pytest
+      if: matrix.test-area == 'pytest'
+      uses: codecov/codecov-action@v1.1.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        fail_ci_if_error: true
