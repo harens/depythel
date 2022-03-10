@@ -82,7 +82,9 @@ def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
 'clang-12': 'build', 'curl': 'lib', 'zlib': 'lib', 'openssl11': 'lib', \
 'libgit2': 'lib', 'libssh2': 'lib', 'rust': 'lib'}}
     """
-    tree: AnyTree = {}
+    # For some reason, mypy doesn't like the type alias
+    # However, the dictionary always remains a dictionary
+    tree: AnyTree = {}  # type: ignore[assignment]
     stack = deque([name])
 
     try:
@@ -114,7 +116,7 @@ def tree_generator(name: str, repository: str) -> Callable[[], AnyTree]:
         next_child = stack.popleft()
         log.debug(f"Retrieving dependencies for {next_child} - popped from stack")
         # We've checked to make sure that the attribute is defined
-        children = module.online(next_child)  # type: ignore[attr-defined]
+        children = module.online(next_child)
         log.debug(f"{next_child}'s dependencies: {children.keys()}")
         tree[next_child] = children
         stack.extend((child for child in children if child not in deque(tree) + stack))
