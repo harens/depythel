@@ -53,15 +53,17 @@ if sys.version_info >= (3, 9):  # pragma: no cover
     DequeType = deque
     DictType = dict
     GeneratorType = Generator
+    ListType = list
     SetType = set
 else:  # pragma: no cover
     from functools import lru_cache
-    from typing import Deque, Dict, Generator, Set
+    from typing import Deque, Dict, Generator, List, Set
 
     CacheType = lru_cache(maxsize=None)
     DequeType = Deque
     DictType = Dict
     GeneratorType = Generator
+    ListType = List
     SetType = Set
 
 # Standard tree e.g. {'a': 'b', 'b': 'a'}
