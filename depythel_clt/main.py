@@ -35,13 +35,12 @@ import ast
 import logging
 from typing import Any, Optional
 
-import click
+import rich_click as click
 import rich
 from beartype import beartype
 from networkx.classes.digraph import DiGraph
 from pyvis.network import Network
 from rich.progress import Progress
-import rich_click
 
 from depythel import __version__
 from depythel_api.depythel._utility_imports import AnyTree
@@ -50,19 +49,11 @@ from depythel_api.depythel.main import tree_generator, topological_sort
 log = logging.getLogger(__name__)
 
 
-# From https://github.com/ewels/rich-click#the-good-and-proper-way
-# Used for formatting click help output with rich
-class RichClickGroup(click.Group):
-    def format_help(self, ctx, formatter):
-        rich_click.rich_format_help(self, ctx, formatter)
 
 
-class RichClickCommand(click.Command):
-    def format_help(self, ctx, formatter):
-        rich_click.rich_format_help(self, ctx, formatter)
 
 
-@click.group(cls=RichClickGroup)
+@click.group()
 @click.version_option(__version__)
 def depythel() -> None:
     """Interdependency Visualiser and Dependency Hell scrutiniser."""
@@ -125,7 +116,7 @@ def support_pipe(
     "path",
     type=click.Path(dir_okay=False, writable=True),
 )
-@depythel.command(cls=RichClickCommand)
+@depythel.command()
 @beartype
 def visualise(path: str, tree: AnyTree) -> None:
     """Generates an html file visualising a dependency graph.
@@ -152,7 +143,7 @@ def visualise(path: str, tree: AnyTree) -> None:
 
 
 @click.argument("tree", callback=support_pipe, required=False, type=TREE_TYPE)
-@depythel.command(cls=RichClickCommand)
+@depythel.command()
 @beartype
 def topological(tree: AnyTree) -> None:
     topological_sort(tree)
@@ -164,7 +155,7 @@ def topological(tree: AnyTree) -> None:
 @click.argument("number", type=int)
 @click.argument("repository")
 @click.argument("name")
-@depythel.command(cls=RichClickCommand)
+@depythel.command()
 @beartype
 def generate(name: str, repository: str, number: int) -> None:
     """Outputs a dependency tree in JSON format.
