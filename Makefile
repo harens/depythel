@@ -9,6 +9,7 @@ format: ## Runs black and isort
 	$(CMD) black .
 
 test: pytest type-checking lint dependencies  ## Runs all available tests (pytest, type checking, etc.)
+install: install-pytest install-type-checking install-dependencies install-lint
 
 pytest:  ## Runs pytest on the tests folder and outputs coverage.xml
 	$(CMD) pytest --cov-report=xml:coverage.xml --cov=depythel_api/depythel --cov=depythel_clt depythel_api/tests tests
@@ -20,7 +21,7 @@ type-checking:  ## Runs mypy --strict
 	$(CMD) mypy --strict depythel_api depythel_clt tests
 
 install-type-checking:  # pytest required for mypy of test files
-	$(CMD) pip install mypy pytest pytest-mock
+	$(CMD) pip install mypy==0.931 pytest pytest-mock
 
 dependencies:  ## Verifies pyproject.toml file integrity
 	$(POETRY_CMD) check
