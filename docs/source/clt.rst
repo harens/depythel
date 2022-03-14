@@ -1,6 +1,6 @@
 Command Line Overview
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. click:: depythel.clt.main:depythel
+.. click:: depythel_clt.main:depythel
   :prog: depythel
   :nested: full
