@@ -40,11 +40,10 @@ import rich_click as click
 from beartype import beartype
 from networkx.classes.digraph import DiGraph
 from pyvis.network import Network
-from rich.progress import Progress
 
 from depythel import __version__
 from depythel._utility_imports import AnyTree
-from depythel.main import cycle_check, topological_sort, tree_generator
+from depythel.main import LocalTree, Tree
 from depythel_clt._click_modules import TREE_TYPE, repository_complete, support_pipe
 
 log = logging.getLogger(__name__)
@@ -98,18 +97,24 @@ def topological(tree: AnyTree) -> None:
     TREE is a directed acyclic graph representing a dependency tree.
 
     """
-    for item in topological_sort(tree):
+    tree_object = LocalTree(tree)
+    for item in tree_object.topological_sort():
         click.echo(item)
 
 
 # TODO: Maybe error if cycle present?
 @click.argument("tree", callback=support_pipe, required=False, type=TREE_TYPE)
-@click.argument("root")
+@click.option(
+    "--first/--all",
+    default=True,
+    help="--first halts after the first cycle is found (default). --all generates all cycles.",
+)
 @depythel.command()
 @beartype
-def cycle(root: str, tree: AnyTree) -> None:
+def cycle(tree: AnyTree, first: bool) -> None:
     """Perform a level-order traversal of TREE looking for any cycles."""
-    click.echo(cycle_check(root, tree))
+    tree_object = LocalTree(tree)
+    click.echo(tree_object.cycle_check(first))
 
 
 # TODO: Figure out how to deal with invalid project name.
@@ -126,11 +131,7 @@ def generate(name: str, repository: str, number: int) -> None:
     A tree is generated for NAME from REPOSITORY. It generates NUMBER amounts of children.
 
     """
-    generator = tree_generator(name, repository)
-    with Progress(transient=True) as progress:
-        task = progress.add_task("🧪 Processing...", total=100)
-        for _ in range(number):
-            final_tree = generator()
-            progress.update(task, advance=100 / number)
+    tree_object = Tree(name, repository, number)
+    tree_object.set_size(number)  # TODO: Would be nice to get a progress bar.
     # Unlike API, output in a visual format
-    rich.print_json(data=final_tree)
+    rich.print_json(data=tree_object.tree)

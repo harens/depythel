@@ -26,7 +26,7 @@ dependencies:  ## Verifies pyproject.toml file integrity
 	$(POETRY_CMD) check
 	$(CMD) pip check
 
-install-dependencies:
+install-dependencies:  ## Don't install anything
 	@:
 
 lint:  ## Tests whether formatting meets standards

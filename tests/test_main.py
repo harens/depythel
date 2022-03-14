@@ -91,13 +91,13 @@ class TestCycleCheck:
     def test_no_cycle(self) -> None:
         """Tests no cycle output from depythel cycle."""
         runner = CliRunner()
-        result = runner.invoke(depythel, ["cycle", "a", "{'a': 'b', 'b': 'c'}"])
+        result = runner.invoke(depythel, ["cycle", "{'a': 'b', 'b': 'c'}"])
         assert result.output.strip() == "False"
 
     def test_cycle(self) -> None:
         """Tests the output of depythel cycle when there is a cycle present."""
         runner = CliRunner()
-        result = runner.invoke(depythel, ["cycle", "a", "{'a': 'b', 'b': 'a'}"])
+        result = runner.invoke(depythel, ["cycle", "{'a': 'b', 'b': 'a'}"])
         assert result.output.strip() == "True"
 
 

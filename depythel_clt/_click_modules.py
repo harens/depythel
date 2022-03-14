@@ -47,7 +47,9 @@ log = logging.getLogger(__name__)
 
 
 @beartype
-def repository_complete(ctx: Context, args: Argument, incomplete: str) -> ListType[str]:
+def repository_complete(
+    _ctx: Context, _args: Argument, incomplete: str
+) -> ListType[str]:
     """Provides autocomplete for supported repositories."""
     # Based on https://stackoverflow.com/a/1310912
     pkgpath = os.path.dirname(
@@ -93,7 +95,9 @@ TREE_TYPE = TreeType()
 
 @beartype
 def support_pipe(
-    ctx: Optional[click.core.Context], param: Optional[click.core.Parameter], value: Any
+    _ctx: Optional[click.core.Context],
+    param: Optional[click.core.Parameter],
+    value: Any,
 ) -> Any:
     """This allows the depythel function to support piping input."""
     # Based on https://github.com/pallets/click/issues/1370#issuecomment-522549260
