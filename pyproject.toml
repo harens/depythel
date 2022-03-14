@@ -15,7 +15,7 @@ pyvis = "^0.1.9"
 networkx = "^2.6.3"
 click = "^8.0.3"
 rich = "^11.0.0"
-beartype = "^0.10.0"
+beartype = "^0.10.3"
 rich-click = "^1.2.1"
 
 [tool.poetry.dev-dependencies]

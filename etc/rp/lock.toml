@@ -25,16 +25,16 @@ python-versions = "*"
 
 [[package]]
 name = "beartype"
-version = "0.10.2"
+version = "0.10.3"
 description = "Unbearably fast runtime type checking in pure Python."
 optional = false
 python-versions = ">=3.6.0"
 
 [package.extras]
 all = [ "typing-extensions (>=3.10.0.0)"]
-dev = [ "coverage (>=5.5)",  "sphinx",  "typing-extensions",  "mypy (>=0.800)",  "numpy",  "pytest (>=4.0.0)",  "tox (>=3.20.1)",  "sphinx (>=4.1.0)"]
+dev = [ "coverage (>=5.5)",  "sphinx",  "pytest (>=4.0.0)",  "tox (>=3.20.1)",  "sphinx (>=4.1.0)",  "mypy (>=0.800)",  "typing-extensions",  "numpy"]
 doc-rtd = [ "sphinx (==4.1.0)",  "sphinx-rtd-theme (==0.5.1)"]
-test-tox = [ "sphinx",  "typing-extensions",  "mypy (>=0.800)",  "numpy",  "pytest (>=4.0.0)"]
+test-tox = [ "sphinx",  "pytest (>=4.0.0)",  "mypy (>=0.800)",  "typing-extensions",  "numpy"]
 test-tox-coverage = [ "coverage (>=5.5)"]
 
 [[package]]
@@ -317,7 +317,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "730e3cb6b28c00903210359e0ed9c26d4f5f8fc9e4b20358b3dff23fa6f75028"
+content-hash = "e00e3d2702cce819f83ed50b32f77c59ac926bb79e64d3a3ed53df155e2e36d7"
 
 [metadata.files]
 depythel-api = []
@@ -347,12 +347,12 @@ file = "backcall-0.2.0.tar.gz"
 hash = "sha256:5cbdbf27be5e7cfadb448baf0aa95508f91f2bbc6c6437cd9cd06e2a4c215e1e"
 
 [[metadata.files.beartype]]
-file = "beartype-0.10.2-py3-none-any.whl"
-hash = "sha256:6e05f9825917219d9380f76a4ba31d8ff29de36556abed70ddc8da7ac59f6d13"
+file = "beartype-0.10.3-py3-none-any.whl"
+hash = "sha256:6d732fde3dcd43204a2d8ec978ec6193aa7fcf06d7286339039a5644b42b0436"
 
 [[metadata.files.beartype]]
-file = "beartype-0.10.2.tar.gz"
-hash = "sha256:2e8d405318fe411ecdd937627f9f33181312a793ebd239b3da769c4439cb4b98"
+file = "beartype-0.10.3.tar.gz"
+hash = "sha256:5ca1bb66dd9647155bfdb82ca1a066663f7743f2bc87f60004addf739def8236"
 
 [[metadata.files.click]]
 file = "click-8.0.4-py3-none-any.whl"
