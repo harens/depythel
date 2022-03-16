@@ -18,6 +18,7 @@ Documentation License`".
       introduction
       analysis
       design
+      test
       clt
       reference
       gnu

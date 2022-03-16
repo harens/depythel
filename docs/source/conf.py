@@ -36,6 +36,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_click",
     "sphinx.ext.autosectionlabel",
+    "sphinxcontrib.rsvgconverter",
 ]
 autosummary_generate = True
 
