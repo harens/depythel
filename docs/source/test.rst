@@ -1,6 +1,8 @@
 Testing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Adquate testing helps to ensure that the code base works as intended. To carry this out, unit tests were written to test the individual components.
+
 Some of the reasons unit testing was chosen include [1]_:
 
 - If code needs to be refactored, the tests can be reused.

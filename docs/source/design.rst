@@ -1,6 +1,25 @@
 Design
 =======================================================================================================================
 
+.. figure:: art/file_structure.png
+
+   depythel File Structure
+
+   The overall depythel folder indicates the git directory, and the arrows indicate which folders depend on what.
+
+   The directories in pink indicate the python modules that can be imported and what will be distributed via PyPi.
+
+.. figure:: art/build_system.png
+
+   Deployment of depythel to PyPi
+
+   Distribution files in the form of source code and `wheels <https://pythonwheels.com/>`_ will be generated via poetry.
+
+   These will be uploaded to `Test PyPi <https://test.pypi.org/>`_ first to ensure everything has worked, and then `PyPi <https://pypi.org/>`_.
+
+   The modules can then be accessed by the clients via ``pip``.
+
+
 High Level Overview
 -----------------------------------------------------------------------------------------------------------------------
 

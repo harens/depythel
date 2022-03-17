@@ -57,13 +57,16 @@ Poetry
   :alt: Poetry package manager logo
 
 `Poetry <https://python-poetry.org/>`_ is a Python package manager, which depythel ironically uses itself behind the
-scenes (since it is amazing!). If there exists a solution to a dependency conflict, it will find it. In this regard, it
+scenes to manage its own dependencies. If there exists a solution to a dependency conflict, it will find it. In this regard, it
 is a much more stable and polished tool than depythel.
 
 However, it is Python-specific, whilst depythel aims to support a variety of languages and package managers in a
 simple, modular fashion. Poetry is also a general package manager, and doesn't focus specifically on aspects like
-dependency visualisation. In this regard, if all you're looking for is generic dependency management, depythel is the
-tool for you.
+dependency visualisation. In this regard, if all you're looking for is generic dependency management, depythel aims to be a more apt tool.
+
+.. figure:: art/poetry-tree.png
+
+    The dependency tree of depythel CLT, generated via poetry.
 
 System Package Managers
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -76,6 +79,10 @@ a way to allow configurability and easy adoption into workflows.
 
 Visualisation Tools
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. figure:: https://raw.githubusercontent.com/naiquevin/pipdeptree/master/docs/twine-pdt.png
+
+   Visualising the dependency tree of a project using ``pipdeptree``.
 
 Visualisation tools, such as the one present in the `Haskell Tool Stack
 <https://docs.haskellstack.org/en/stable/dependency_visualization/>`_, provide a visual way of showing a developer the
@@ -165,24 +172,32 @@ Features of proposed solution / Requirements specification
 Critical Path
 -----------------------------------------------------------------------------------------------------------------------
 
-#. Implement at least one example of retrieving data from a language repository/file.
+#. Implement modules for retrieving data from a language repository.
 
     * This is useful since the data can be used to test the graphing algorithm.
 
-#. Build a priority queue system to store the dependencies that need to be inserted into the graph.
+#. Provide a data structure to store the dependency tree.
 
-    * Dependencies should be added in level order, so that the user can decide how many levels deep the graph should
-      go. Therefore, a priority queue is required (rather than a standard queue) so that *A*'s dependencies come after
-      *B* itself.
+    * This could, for instance, be a priority queue system. This is able to prioritise dependencies depending on how far
+      down it is in the tree.
 
-        * Standard Queue: [A, A.deps(), B, B.deps(), C, C.deps(), etc.]
+    * Dependencies should be added in level order. This method is used by the majority of existing implementations, and
+      allows the user to have a more broad understanding of a project's dependencies.
 
-        * Priority Queue: [A, B, C, ..., A.deps(), B.deps(), C.deps(), ...]
+    * Implementation details: If a project depends on A and B, the children of these dependencies should go after them.
 
-#. Produce a graph to store this information
+        * Standard Queue: ``[A, A.deps(), B, B.deps(), C, C.deps(), etc.]``
 
-#. Determine errors in the dependency graph.
+        * Priority Queue: ``[A, B, C, ..., A.deps(), B.deps(), C.deps(), ...]``
 
-#. Provide an easy way to view and modify the graph.
+#. Determine potential errors in the dependency graph.
 
-    * For the Python API, this might be something like a dictionary. For general use, it could be text/JSON output.
+#. Begin work on the Command Line Tool.
+
+    * This should be a different module to the API, so that they can be installed separately.
+
+#. Produce a visual graph to represent this information.
+
+    * This might be in the form of text/JSON output, similar to poetry. Or, it could be an image file more akin to pydeptree.
+
+#. Continually write unit tests to check that the modules work as expected.
