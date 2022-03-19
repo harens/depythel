@@ -90,7 +90,7 @@ dependencies of their project.
 
 With minor exceptions, like `pipdeptree <https://github.com/naiquevin/pipdeptree>`_, they don't normally warn the user
 or errors in the dependency tree itself. They also usually support only one language. Depythel aims to not only warn of
-potential misconfigurations, but also to support a variety of online language repos and file formats.
+potential misconfigurations, but also to support a variety of online language repos.
 
 Features of proposed solution / Requirements specification
 -----------------------------------------------------------------------------------------------------------------------
@@ -99,13 +99,10 @@ Features of proposed solution / Requirements specification
 
     * It should be simple to add support for different language repositories (e.g. MacPorts, NPM)...
 
-    * ...as well as different language files (e.g. pyproject.toml, cargo.build, etc.)
-
-        * This is particularly important since current solutions mainly focus on a particular repository, with limited
-          support for files (let alone of different languages).
+        * This is especially important, since the majority of existing implementations only support one repository/language.
 
     * This will be a success if data can be successfully extracted out of at least three different language
-      files/repos.
+      repos.
 
     * Modular language support is not only important as a USP for depythel, but also since Dependency Hell can happen
       in any language.
@@ -123,7 +120,7 @@ Features of proposed solution / Requirements specification
       usage. This is especially important for continuous testing integration, where a CLT can be easily added.
 
     * Although the CLT is designed with more novice users in mind, it should not be a watered down version of the API.
-      Therefore, it will be a success if it has the same feature set as the API (i.e. it shares the same core
+      Therefore, it will be a success if it has the same or an improved feature set compared to the API (i.e. it shares the same core
       functionality).
 
 #. **Detect possible conflicts to a dependency depth specified by the user**
@@ -152,6 +149,37 @@ Features of proposed solution / Requirements specification
             * Although not an error, this can result in a lot of disk space being required to install the program, and
               it can take a long time to install.
 
+#. **Support user-generated trees**
+
+    * As part of the API, a third-party developer might want to run the depythel modules on custom dependency trees.
+
+    * This also allows for depythel to work without internet access, which is useful for reproducibility.
+
+    * The user should be able to enter their own tree in as part of both the CLT and the API. The majority of depythel modules
+      should then function as if the online repositories were used.
+
+#. **Implement contingency plans for large dependency trees**
+
+    * In reality, dependency trees for large projects can be extremely large and take a long time to generate. Measures
+      should be in place to account for this. This should include:
+
+        * **Generate dependency trees to a depth specified by the user**
+
+            * The user might only be interested in the first few dependencies. Too many projects in a tree can make it
+              hard to extract information from it.
+
+        * **Support for caching**
+
+            * For large projects, cycles are likely to occur. Instead of refetching information about a project from the
+              online repository, some basic caching can speed up the tree generation.
+
+                * Reducing the number of API calls also helps to reduce the strain on the servers of the online repositories.
+
+            * Efficient solutions exist natively in Python, such as from ``functools.cache``. It therefore seems unnecessary
+              to reinvent the wheel and implement a custom caching function.
+
+            * It should be client-side caching and not server-side since the data is not deterministic. Dependencies can be
+              updated frequently and so it would not be wise to cache incorrect information in a database.
 
 #. **Provide some form of dependency visualisation**
 
@@ -163,11 +191,22 @@ Features of proposed solution / Requirements specification
 
     * To be a success, there should be at least two forms of possible output available, so as to give the users choice.
 
-#. **>= 95% Test Coverage**
+#. **Unit Testing**
 
-    * A high test coverage is essential for making sure the code is properly tested and functions as expected.
+    Unit tests provide a useful way of determining whether the code base works as intended. To pass this criteria,
+    there must be the following
 
-    * In terms of being a success, this is pretty self-explanatory. It must pass this percentage in terms of coverage.
+    * **Automated Testing**
+
+        * This would provide a useful way to determine whether recent changes work as expected.
+
+        * This could be in the form of a GitHub actions workflow, which could test newly uploaded commits.
+
+    * **>= 95% Test Coverage**
+
+        * A high test coverage is essential for making sure the code is properly tested and functions as expected.
+
+        * In terms of being a success, this is pretty self-explanatory. It must pass this percentage in terms of coverage.
 
 Critical Path
 -----------------------------------------------------------------------------------------------------------------------
