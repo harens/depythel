@@ -1,13 +1,25 @@
 Design
 =======================================================================================================================
 
-.. figure:: art/file_structure.png
+.. figure:: art/user_diagram.png
 
-   depythel File Structure
+   Use Case Diagram for depythel
 
-   The overall depythel folder indicates the git directory, and the arrows indicate which folders depend on what.
+   A general user can use the Command Line Tool, which should provide an easy-to-use frontend for working with depythel.
 
-   The directories in pink indicate the python modules that can be imported and what will be distributed via PyPi.
+   Third-party developers, who might want to extend the functionality of depythel further, can make use of an API.
+   The benefits of the API include having no external dependencies, as well as being type-checked and documented.
+
+.. figure:: art/uml_diagram.png
+
+   UML Class Diagram for depythel
+
+   A base ``Tree`` class will support locally-generated trees. It will split a dictionary
+   representing an adjacecncy list into ``Projects``.
+
+   An online tree class will extend this class by adding support for online repositories.
+
+   The CLT will use the Tree class as a basis for performing tree operations.
 
 .. figure:: art/build_system.png
 
@@ -19,6 +31,28 @@ Design
 
    The modules can then be accessed by the clients via ``pip``.
 
+.. figure:: art/file_structure.png
+
+   depythel File Structure
+
+   The overall depythel folder indicates the git directory, and the arrows indicate which folders depend on what.
+
+   The directories in pink indicate the python modules that can be imported and what will be distributed via PyPi.
+
+.. figure:: art/clt_mockup.png
+   :width: 555
+
+   Mockup of the depythel CLT
+
+   It will provide some visual output to display a dependency tree, and it should also be able to
+   detect cycles.
+
+.. figure:: art/api_mockup.png
+   :width: 555
+
+   Mockup of the depythel API
+
+   This will be accessed via Python, and it should provide a similar functionality to the CLT.
 
 High Level Overview
 -----------------------------------------------------------------------------------------------------------------------
@@ -75,6 +109,20 @@ provide. To do so effectively, a priority queue showing the order of dependencie
 
 This will be done via bredth-first traversal down the dependency tree, so that the dependencies of dependencies can be
 placed in the correct ordering. See below for more details.
+
+#. Provide a data structure to store the dependency tree.
+
+    * This could, for instance, be a priority queue system. This is able to prioritise dependencies depending on how far
+      down it is in the tree.
+
+    * Dependencies should be added in level order. This method is used by the majority of existing implementations, and
+      allows the user to have a more broad understanding of a project's dependencies.
+
+    * Implementation details: If a project depends on A and B, the children of these dependencies should go after them.
+
+        * Standard Queue: ``[A, A.deps(), B, B.deps(), C, C.deps(), etc.]``
+
+        * Priority Queue: ``[A, B, C, ..., A.deps(), B.deps(), C.deps(), ...]``
 
 Description of Algorithms
 -----------------------------------------------------------------------------------------------------------------------

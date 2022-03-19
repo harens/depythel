@@ -172,32 +172,14 @@ Features of proposed solution / Requirements specification
 Critical Path
 -----------------------------------------------------------------------------------------------------------------------
 
-#. Implement modules for retrieving data from a language repository.
+Although many of the tasks can be carried out in conjunction with each other, some tasks need to be completed before
+others can begin. The diagram shows a critical path with a general overview of the jobs to complete.
 
-    * This is useful since the data can be used to test the graphing algorithm.
+.. figure:: art/critical_path.png
 
-#. Provide a data structure to store the dependency tree.
+Initialising the repository modules is especially important since it provides the foundation for building the
+dependency tree. Following this, various tree-orientated functionality can be written.
 
-    * This could, for instance, be a priority queue system. This is able to prioritise dependencies depending on how far
-      down it is in the tree.
+The command line tool acts as a frontend for the API, and so can only be implemented following the API's completion.
 
-    * Dependencies should be added in level order. This method is used by the majority of existing implementations, and
-      allows the user to have a more broad understanding of a project's dependencies.
-
-    * Implementation details: If a project depends on A and B, the children of these dependencies should go after them.
-
-        * Standard Queue: ``[A, A.deps(), B, B.deps(), C, C.deps(), etc.]``
-
-        * Priority Queue: ``[A, B, C, ..., A.deps(), B.deps(), C.deps(), ...]``
-
-#. Determine potential errors in the dependency graph.
-
-#. Begin work on the Command Line Tool.
-
-    * This should be a different module to the API, so that they can be installed separately.
-
-#. Produce a visual graph to represent this information.
-
-    * This might be in the form of text/JSON output, similar to poetry. Or, it could be an image file more akin to pydeptree.
-
-#. Continually write unit tests to check that the modules work as expected.
+Throughout the process, unit tests should be written to ensure that the code base works as expected.
