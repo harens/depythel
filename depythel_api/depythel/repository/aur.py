@@ -64,7 +64,7 @@ def online(
     Returns: A dictionary of build/run/etc. dependencies.
 
     Examples:
-        >>> from depythel.api.repository.aur import online
+        >>> from depythel.repository.aur import online
         >>> online("rget")
         {'rustup': 'MakeDepends'}
         >>> online("gmp-hg")

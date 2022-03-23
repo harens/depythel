@@ -92,121 +92,20 @@ With minor exceptions, like `pipdeptree <https://github.com/naiquevin/pipdeptree
 or errors in the dependency tree itself. They also usually support only one language. Depythel aims to not only warn of
 potential misconfigurations, but also to support a variety of online language repos.
 
-Features of proposed solution / Requirements specification
+Features of proposed solution
 -----------------------------------------------------------------------------------------------------------------------
 
-#. **Modular Language Support**
+The user will be able to install the API or the CLT (or both) via PyPi. Upon running the CLT, they will be greeted
+with a colourful help message giving a basic overview of the subcommands. If they choose to generate a dependency tree,
+a formatted JSON/text response will be returned. Alternatively, they will be able to enter their own tree and run methods
+on that.
 
-    * It should be simple to add support for different language repositories (e.g. MacPorts, NPM)...
+An interactive output will be generated for a given tree if the user specifies. They will be able to "pipe" any JSON output
+to a file/other commands if they so desire for further management by other tools.
 
-        * This is especially important, since the majority of existing implementations only support one repository/language.
-
-    * This will be a success if data can be successfully extracted out of at least three different language
-      repos.
-
-    * Modular language support is not only important as a USP for depythel, but also since Dependency Hell can happen
-      in any language.
-
-    "Dependency hell is not technology specific either. I've run into it in the Ruby/Rails ecosystem, in the Clojure
-    ecosystem, and in the NodeJS ecosystem. I know folks who have run into it in C++ and Python, too. You name the \
-    language, operating system, framework...it's going to happen."
-
-    -- `John Bintz, Software Engineer at Tidelift
-    <https://dev.to/tidelift/dependency-hell-is-inevitable-and-that-s-ok-and-you-re-ok-too-5594>`_
-
-#. **Command Line Tool**
-
-    * Although the Python API is being developed first, a command line tool should still be available for general
-      usage. This is especially important for continuous testing integration, where a CLT can be easily added.
-
-    * Although the CLT is designed with more novice users in mind, it should not be a watered down version of the API.
-      Therefore, it will be a success if it has the same or an improved feature set compared to the API (i.e. it shares the same core
-      functionality).
-
-#. **Detect possible conflicts to a dependency depth specified by the user**
-
-    * To be a success, it should be able to detect at least the following conflicts to a dependency depth specified by
-      the user:
-
-        * Circular dependencies
-
-            * If *A* and *B* are dependencies, and *A requires B* to build and vice versa, that's going to break during
-              buildtime.
-
-            * Out of all the features of the proposed solution, this one is likely to be one of the most time
-              consuming. This is since circular dependencies break the standard layout of a dependency tree. However,
-              it should still be feasible.
-
-        * Incompatible versions
-
-
-            * If *A.1* and *A.2* are both required somewhere in the dependency tree, they can't be installed at the
-              same time. This can be detected by noting the number on the end of the dependency.
-
-      * Long dependency chains/Too many dependencies
-
-
-            * Although not an error, this can result in a lot of disk space being required to install the program, and
-              it can take a long time to install.
-
-#. **Support user-generated trees**
-
-    * As part of the API, a third-party developer might want to run the depythel modules on custom dependency trees.
-
-    * This also allows for depythel to work without internet access, which is useful for reproducibility.
-
-    * The user should be able to enter their own tree in as part of both the CLT and the API. The majority of depythel modules
-      should then function as if the online repositories were used.
-
-#. **Implement contingency plans for large dependency trees**
-
-    * In reality, dependency trees for large projects can be extremely large and take a long time to generate. Measures
-      should be in place to account for this. This should include:
-
-        * **Generate dependency trees to a depth specified by the user**
-
-            * The user might only be interested in the first few dependencies. Too many projects in a tree can make it
-              hard to extract information from it.
-
-        * **Support for caching**
-
-            * For large projects, cycles are likely to occur. Instead of refetching information about a project from the
-              online repository, some basic caching can speed up the tree generation.
-
-                * Reducing the number of API calls also helps to reduce the strain on the servers of the online repositories.
-
-            * Efficient solutions exist natively in Python, such as from ``functools.cache``. It therefore seems unnecessary
-              to reinvent the wheel and implement a custom caching function.
-
-            * It should be client-side caching and not server-side since the data is not deterministic. Dependencies can be
-              updated frequently and so it would not be wise to cache incorrect information in a database.
-
-#. **Provide some form of dependency visualisation**
-
-    * This might be in the form of parsable JSON output (or some other format). The added benefit of this is that the
-      end user can then use the data more efficiently compared to an image.
-
-    * For the CLT, where the end users are less experienced, an interactive tree might be a more beneficial form of
-      visualisation.
-
-    * To be a success, there should be at least two forms of possible output available, so as to give the users choice.
-
-#. **Unit Testing**
-
-    Unit tests provide a useful way of determining whether the code base works as intended. To pass this criteria,
-    there must be the following
-
-    * **Automated Testing**
-
-        * This would provide a useful way to determine whether recent changes work as expected.
-
-        * This could be in the form of a GitHub actions workflow, which could test newly uploaded commits.
-
-    * **>= 95% Test Coverage**
-
-        * A high test coverage is essential for making sure the code is properly tested and functions as expected.
-
-        * In terms of being a success, this is pretty self-explanatory. It must pass this percentage in terms of coverage.
+The API will be importable via the console. It will have no dependencies, allowing users to download the source
+code directly and run it if they want. It will provide a ``Tree`` class to store either a user-generated or
+repo-generated tree, and will provide methods such as cycle checking and topological sorting to act on them.
 
 Critical Path
 -----------------------------------------------------------------------------------------------------------------------
@@ -216,9 +115,148 @@ others can begin. The diagram shows a critical path with a general overview of t
 
 .. figure:: art/critical_path.png
 
+   An outline of what order the tasks need to be completed as part of the critical path.
+
 Initialising the repository modules is especially important since it provides the foundation for building the
 dependency tree. Following this, various tree-orientated functionality can be written.
 
 The command line tool acts as a frontend for the API, and so can only be implemented following the API's completion.
 
 Throughout the process, unit tests should be written to ensure that the code base works as expected.
+
+Requirements specification
+-----------------------------------------------------------------------------------------------------------------------
+
+#. API
+
+    #. User-orientated
+
+        #. The API must function on all `supported python versions <https://endoflife.date/python>`_. As of the time of
+           writing, this is Python 3.7 up to 3.10.
+
+            * This allows more people to be able to run depythel, helping to make it more accessible.
+
+        #. There must be help documentation available for all public modules and attributes.
+
+            * This helps to make depythel easier to use. Without adequate documentation, it would be difficult for new users
+              to use depythel effectively.
+
+        #. The module must comply with `PEP 561 <https://peps.python.org/pep-0561/>`_.
+
+            #. depythel should be fully type-checked, and the types of various attributes/parameters/etc. should be
+               available to the user. This can then be used by autocomplete tools such as PyCharm.
+
+            #. Its compliance can be checked using `mypy <http://mypy-lang.org>`_. It will be a success if there are no
+               errors after running ``mypy --strict`` on the code base.
+
+        #. It must be installable via PyPi.
+
+            * The user should be able to install the API easily without having to fetch dependencies and build from source.
+
+    #. Application Programming Interface
+
+        To be a success, these modules should pass a series of fabricated scenarios via unit testing.
+
+        #. It must be able to detect cycles in a dependency tree.
+
+            * If *A* and *B* are dependencies, and *A requires B* to build and vice versa, that's going to break during
+              buildtime.
+
+            * depythel aims to detect errors in dependency trees. Since trees are acyclic, cycles count as an error.
+
+            * Out of all the features of the proposed solution, this one is likely to be one of the most time
+              consuming. This is since circular dependencies break the standard layout of a dependency tree. However,
+              it should still be feasible.
+
+        #. It must be able to perform topological sorting.
+
+            * Dependency trees are normally used to determine what dependencies to install when building a project.
+              depythel should be able to determine the correct order to install these dependencies.
+
+        #. depythel should be able to retrieve information from at least three different online repositories.
+
+            * Dependency hell can occur in a variety of different environments. depythel should therefore be able
+              to work with different repos (e.g. MacPorts, NPM, etc.)
+
+            * This is especially important, since the majority of existing implementations only support one repository/language.
+
+            "Dependency hell is not technology specific either. I've run into it in the Ruby/Rails ecosystem, in the Clojure
+            ecosystem, and in the NodeJS ecosystem. I know folks who have run into it in C++ and Python, too. You name the \
+            language, operating system, framework...it's going to happen."
+
+            -- `John Bintz, Software Engineer at Tidelift
+            <https://dev.to/tidelift/dependency-hell-is-inevitable-and-that-s-ok-and-you-re-ok-too-5594>`_
+
+            * Modular language support is not only important as a USP for depythel, but also since Dependency Hell can happen
+              in any language.
+
+        #. User-generated trees should be able to use the same modules as trees from online repositories.
+
+            * As part of the API, a third-party developer might want to run the depythel modules on custom dependency trees.
+
+            * This feature also allows for depythel to work without internet access, which is useful for reproducibility.
+
+            * The user should be able to enter their own tree in as part of both the CLT and the API. The majority of depythel modules
+              should then function as if the online repositories were used.
+
+        #. There must be some form of dependency visualisation available.
+
+            * This might be in the form of parsable JSON output (or some other format). The added benefit of this is that the
+              end user can then use the data more efficiently compared to an image.
+
+        #. Large dependency trees should have additional fallbacks in place.
+
+            * In reality, dependency trees for large projects can be extremely large and take a long time to generate. Measures
+              should be in place to account for this. This should include:
+
+            * Generate dependency trees to a depth specified by the user
+
+                * The user might only be interested in the first few dependencies. Too many projects in a tree can make it
+                  hard to extract information from it.
+
+            * Support for caching
+
+                * For large projects, cycles are likely to occur. Instead of refetching information about a project from the
+                  online repository, some basic caching can speed up the tree generation.
+
+                * Reducing the number of API calls also helps to reduce the strain on the servers of the online repositories.
+
+                * Efficient solutions exist natively in Python, such as from ``functools.cache``. It therefore seems unnecessary
+                  to reinvent the wheel and implement a custom caching function.
+
+                * It should be client-side caching and not server-side since the data is not deterministic. Dependencies can be
+                  updated frequently and so it would not be wise to cache incorrect information in a database.
+
+    #. Command Line Tool
+
+        Although the Python API is being developed first, a command line tool should still be available for general
+        usage. This is especially important for continuous testing integration, where a CLT can be easily added.
+
+        #. It should provide at least the same feature set as the API.
+
+            * Although the CLT is designed with more novice users in mind, it should not be a watered down version of the API.
+              They should both have the same core functionality.
+
+        #. Similar to the API, some form of dependency visualisation should be available.
+
+            * For the CLT, where the end users are less experienced, an interactive tree might be a more beneficial form of
+              visualisation.
+
+            * To be a success, there should be at least two forms of possible output available, so as to give the users choice.
+
+    #. Unit Testing
+
+        Unit tests provide a useful way of determining whether the code base works as intended. To pass this criteria,
+        there must be the following
+
+        * Automated Testing
+
+            * This would provide a useful way to determine whether recent changes work as expected.
+
+            * This could be in the form of a GitHub actions workflow, which could test newly uploaded commits.
+
+        * >= 95% Test Coverage
+
+            * A high test coverage is essential for making sure the code is properly tested and functions as expected.
+
+            * In terms of being a success, this is pretty self-explanatory. It must pass this percentage in terms of coverage.

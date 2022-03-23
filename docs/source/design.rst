@@ -39,6 +39,230 @@ Design
 
    The directories in pink indicate the python modules that can be imported and what will be distributed via PyPi.
 
+High Level Overview
+-----------------------------------------------------------------------------------------------------------------------
+
++------------------------------+-------------------------------------------------------------+-----------------------------------+----------------------------+
+| Inputs                       | Processes                                                   | Storage                           | Outputs                    |
++==============================+=============================================================+===================================+============================+
+| Dependency Name              | Build and Traverse Dependency Tree                          | Some form of client-based caching | Interactive visualisation  |
++------------------------------+-------------------------------------------------------------+-----------------------------------+----------------------------+
+| Package Manager              | Detect Cycles in the Tree                                   |                                   | Text/JSON based API output |
++------------------------------+-------------------------------------------------------------+-----------------------------------+----------------------------+
+| Number of levels to traverse | Visualising the Tree                                        |                                   |                            |
++------------------------------+-------------------------------------------------------------+-----------------------------------+----------------------------+
+|                              | Other user API processes (e.g. determine topological order) |                                   |                            |
++------------------------------+-------------------------------------------------------------+-----------------------------------+----------------------------+
+
+Please see the :ref:`API Reference` for a more detailed code-based overview of the project.
+
+Description of Data Structures
+-----------------------------------------------------------------------------------------------------------------------
+
+***********************************************************************************************************************
+Dependency Tree Graph
+***********************************************************************************************************************
+
+A dependency tree is required to store what projects each program depends on. At first, an adjacency graph was
+considered since it is very easy to implement and it represents directed graphs well.
+
+However, an adjacency list is likely to be better suited since the dependency graph is likely to be quite sparse, and
+so a list will provide a better space complexity. It's also easy to build depending on the repository's API, and
+can be implemented natively as a dictionary.
+
+***********************************************************************************************************************
+Priority Queue
+***********************************************************************************************************************
+
+A data structure is required to store the dependencies that need to be added to the tree. One potential way of doing
+this would be a priority queue system. This is able to prioritise dependencies based on how far down it is in the tree.
+
+The dependencies should be added in level order. This method is used by the majority of existing implementations, and
+allows the user to have a more broad understanding of a project's dependencies.
+
+Standard Queue: ``[A, A.deps(), B, B.deps(), C, C.deps(), etc.]``
+
+Priority Queue: ``[A, B, C, ..., A.deps(), B.deps(), C.deps(), ...]``
+
+From an implementation point of view, if a project depends on A and B, the children of these dependencies should be added
+afterwards.
+
+..
+    TODO: IT MIGHT BE WORTH PUTTING DEQUE
+
+Description of Algorithms
+-----------------------------------------------------------------------------------------------------------------------
+
+***********************************************************************************************************************
+Breadth-First
+***********************************************************************************************************************
+
+Since dependency trees can be extremely large, the user will be able to enter how far down the tree they want to generate. So as to
+implement this level functionality, the tree/priority queue will be built using a breadth-first approach.
+
+Breadth-first traversal is chosen over depth-first since the users are interested in the dependencies of the root project.
+They are less likely to be interested in the dependencies of dependencies.
+
+.. figure:: art/example_project.png
+
+   An example dependency tree graph for a project
+
+   Using a breadth-first approach, when the tree is being represented in JSON/text, the order should be
+   ``root → A → B → A1 → A2 → B1``.
+
+***********************************************************************************************************************
+Topological Sorting
+***********************************************************************************************************************
+
+Dependency trees at their core are used to determine the order to install projects. For instance, to make a cake
+requires an egg, which requires a chicken. The chicken can't come before the egg. (The chicken came first of course)
+
+In the same way, some dependencies need to be installed before others can, similar to the critical path flowchart for
+what tasks need to be completed before others.
+
+The basic premise of the algorithm is to continually pop projects from the tree that don't have any dependencies. If this is not
+possible at any point during execution, this means that a cycle is present and so no topological sorting is possible.
+
+Cycles are the main cause of no topological sorting being possible.
+As an example, if A → B → A, which dependency do you install first? Therefore, in this scenario, the module should error.
+
+.. figure:: art/valid_topological.png
+
+    Topological Sorting Possible
+
+    Given a valid dependency tree, a valid topological sorting should be generated.
+
+    *Rao, R., 2003. Lecture 20: Topo-Sort and Dijkstra’s Greedy Idea.*
+
+.. figure:: art/invalid_topological.png
+
+    No Topological Sorting Possible
+
+    The tree is invalid since there's a cycle present.
+
+    *Rao, R., 2003. Lecture 20: Topo-Sort and Dijkstra’s Greedy Idea.*
+
+.. figure:: art/topological_flowchart.png
+
+    Intended functionality of depythel topological sorting.
+
+    Algorithm based on *Rao, R., 2003. Lecture 20: Topo-Sort and Dijkstra’s Greedy Idea.*
+
+
+***********************************************************************************************************************
+Cyclic-Dependency Checking
+***********************************************************************************************************************
+
+To detect cycles, we can mark certain
+nodes as *visited* if we have visited all of their children, and *exploring* if it's on our current path. Whilst
+traversing, if we reach an *exploring* node, that means we have reached an earlier point on our trail and we have a
+cycle.
+
+.. figure:: art/Cyclic-Flowchart.png
+   :width: 400
+   :align: center
+   :alt: Cyclic Dependency Algorithm Flowchart
+
+   Flowchart demonstrating the intended functionality of the cyclic dependency algorithm.
+
+    Algorithm based on *Khov, T., 2020. Algorithms on Graphs: Directed Graphs and Cycle Detection. [online] Medium. Available at: <https://trykv.medium.com/algorithms-on-graphs-directed-graphs-and-cycle-detection-3982dfbd11f5> [Accessed 22 March 2022].*
+
+Cycle checking can be implemented whilst generating the tree, which means that the tree doesn't have to be parsed
+again when checking for cycles. Alternatively, this process could be implemented as a separate module so that the user
+can run it when they want.
+
+Codebase Design
+-----------------------------------------------------------------------------------------------------------------------
+
+For each package repository, there should be the option to retrieve the dependencies from an online API.
+By implementing this in a modular fashion, this should make it easier to support different package managers.
+
+***********************************************************************************************************************
+Data Validation
+***********************************************************************************************************************
+
+Within the CLT, `Beartype <https://github.com/beartype/beartype>`_ has been chosen to help validate user inputs. It works
+on the basis of comparing the user's input to the type hint of the parameters.
+
+.. code-block:: python
+
+    from beartype import beartype
+
+    @beartype
+    def output(word: str):
+        print(f"The word you entered was {word}")
+
+    output('hello')
+    # The word you entered was hello
+    output(3)
+    # raises BeartypeCallHintParamViolation
+
+This library in particular has been chosen over other data validation libraries for the following reasons:[2]_
+
+* It provides O(1) runtime type checking.
+* It has no runtime dependencies.
+* It allows defining custom types, such as an integer that has to be exactly two to six digits long.
+
+As such, it should provide more than enough functionality so that a user does not accidentally break a function
+depending on their input.
+
+.. [2] Curry, C., 2022. beartype/README.rst at main · beartype/beartype. [online] GitHub. Available at: <https://github.com/beartype/beartype/blob/main/README.rst> [Accessed 22 March 2022].
+
+***********************************************************************************************************************
+Fetching Dependencies
+***********************************************************************************************************************
+
+If the package manager provides an online API, the dependencies can be retrieved via the ``requests`` package (or something similar).
+
+Benefits:
+
+* It does not require that the user has installed the package manager locally. This therefore leads to greater
+  OS/machine independency.
+* The API should be the more up-to-date that local installation records, and so the dependency graph is more likely to
+  be correct.
+* Fewer security concerns since we are not interacting with the user's package manager.
+
+Originally, it was thought that fetching dependencies from a file, such as ``setup.py`` would be a nice feature to have.
+The following reasons were thought of:
+
+Benefits:
+
+* In some scenarios (dependending on the implementation), this should be quicker than the online approach since
+  everything is done locally.
+* Internet access is not required.
+* Increased reproducibility.
+
+However, as part of the design, fetching via the internet was chosen in preference to this method for the following
+reasons.
+
+Downsides:
+
+* This process can be non-deterministic. As an example, depythel wouldn't be able to tell what dependencies are present given this
+  ``setup.py``:[1]_
+
+.. code-block:: python
+
+    # Written by Dustin Ingram 2018
+    import random
+    from setuptools import setup
+
+    dependency = random.choice(['Schrodinger', 'Cat'])
+
+    setup(
+        name='paradox',
+        version='0.0.1',
+        description='A nondeterministic package',
+        install_requires=[dependency],
+    )
+
+* With the exception of lock files, the dependencies of dependencies would have to be fetched online anyway, which defeats
+  the purpose of not using the internet.
+
+.. [1] Ingram, D., 2018. Why PyPI Doesn't Know Your Projects Dependencies - Dustin Ingram. [online] dustingram.com. Available at: <https://dustingram.com/articles/2018/03/05/why-pypi-doesnt-know-dependencies/> [Accessed 22 March 2022].
+
+Design of User Interface
+-----------------------------------------------------------------------------------------------------------------------
+
 .. figure:: art/clt_mockup.png
    :width: 555
 
@@ -54,161 +278,78 @@ Design
 
    This will be accessed via Python, and it should provide a similar functionality to the CLT.
 
-High Level Overview
------------------------------------------------------------------------------------------------------------------------
-
-.. list-table::
-   :header-rows: 1
-
-   * - Inputs
-
-     - Processes
-     - Storage
-     - Outputs
-   * - Dependency Name
-
-     - Build and Traverse Dependency Tree
-     - Maybe some form of caching? This is risky since the data likely isn't
-       deterministic.
-     - Some form of image visualisation (e.g. image file, terminal output)
-   * - Package Manager
-
-     - Detect cycles in the tree
-     - 
-     - Text-based API output
-   * - Number of levels to traverse
-
-     - Visualising tree
-     -
-     -
-   * - 
-
-     - Other user API processes (e.g. building dependency priority queue)
-     -
-     -
-
-Please see the :ref:`API Reference` for a more detailed code-based overview of the project.
-
-Description of Data Structures
------------------------------------------------------------------------------------------------------------------------
-
-Directed Graph
 ***********************************************************************************************************************
-
-A directed graph is required to store what projects each program depends on. At first, an adjacency graph was
-considered since it is very easy to implement and it represents directed graphs well.
-
-However, an adjacency list is likely to be better suited since the dependency graph is likely to be quite sparse, and
-so a list will provide a better space complexity. It's also easy to build depending on the repository's API.
-
-Priority Queue
-***********************************************************************************************************************
-
-depythel aims to be an API first and foremost, so that endusers can design their own interfaces based on the tools we
-provide. To do so effectively, a priority queue showing the order of dependencies in a tree should be provided.
-
-This will be done via bredth-first traversal down the dependency tree, so that the dependencies of dependencies can be
-placed in the correct ordering. See below for more details.
-
-#. Provide a data structure to store the dependency tree.
-
-    * This could, for instance, be a priority queue system. This is able to prioritise dependencies depending on how far
-      down it is in the tree.
-
-    * Dependencies should be added in level order. This method is used by the majority of existing implementations, and
-      allows the user to have a more broad understanding of a project's dependencies.
-
-    * Implementation details: If a project depends on A and B, the children of these dependencies should go after them.
-
-        * Standard Queue: ``[A, A.deps(), B, B.deps(), C, C.deps(), etc.]``
-
-        * Priority Queue: ``[A, B, C, ..., A.deps(), B.deps(), C.deps(), ...]``
-
-Description of Algorithms
------------------------------------------------------------------------------------------------------------------------
-
-Breadth-First Traversal
-***********************************************************************************************************************
-
-Since dependency trees can be extremely large, the user can enter how far down the tree they want to generate. So as to
-implement this level functionality, the tree/priority queue will be built using a breadth-first approach.
-
-Cyclic-Dependency Checking
-***********************************************************************************************************************
-
-This can be done whilst building the tree. Based on the `following
-<https://trykv.medium.com/algorithms-on-graphs-directed-graphs-and-cycle-detection-3982dfbd11f5>`_, we can mark certain
-nodes as *visited* if we have visited all of their children, and *exploring* if it's on our current path. Whilst
-traversing, if we reach an *exploring* node, that means we have reached an earlier point on our trail and we have a
-cycle.
-
-.. figure:: art/Cyclic-Flowchart.png
-   :width: 400
-   :align: center
-   :alt: Cyclic Dependency Algorithm Flowchart
-
-   Flowchart demonstrating the intended functionality of the cyclic dependency algorithm.
-
-Codebase Design
------------------------------------------------------------------------------------------------------------------------
-
-For each package repository, there should be the option to retrieve the dependencies from online of locally (or both).
-By implementing this in a modular fashion, this should make it easier to support different package managers.
-
-Online
-***********************************************************************************************************************
-
-If the package manager provides an online API, the dependencies can be retrieved via the requests package.
-
-Benefits:
-
-* It does not require that the user has installed the package manager locally. This therefore leads to greater
-  OS/machine independency.
-* The API should be the more up-to-date that local installation records, and so the dependency graph is more likely to
-  be correct.
-* Fewer security concerns since we are not interacting with the user's package manager.
-
-Local
-***********************************************************************************************************************
-
-Most likely, this will involve calling the package manager via the subprocess library and extracting its output. Since
-the majority of package managers do not provide a simple API, this is likely to be the most common option.
-
-Benefits:
-
-* In some scenarios (dependending on the implementation), this should be quicker than the online approach since
-  everything is done locally.
-* Wifi access is not required.
-* Increased reproducibility.
-
-Design of User Interface
------------------------------------------------------------------------------------------------------------------------
-
 Command Line Interface
 ***********************************************************************************************************************
 
 As discussed in the :ref:`Analysis`, although the depythel API is the main priority, it would also be useful to provide
-some form of a command line interface. Preferably, `typer <https://github.com/tiangolo/typer>`_ would have been used to
-provide this. This is since depythel takes `PEP 561 <https://www.python.org/dev/peps/pep-0561/>`_ compatability very
-seriously, and typer provides many additional benefits for this.
+some form of a command line interface. Preferably, `typer <https://github.com/tiangolo/typer>`_ would have been used
+as the framework to provide this. This is since depythel takes `PEP 561 <https://www.python.org/dev/peps/pep-0561/>`_ compatability very
+seriously, and typer provides many additional benefits for doing so.
 
 However, as of the time of writing, it seems to be unmaintained. Therefore, `click
 <https://palletsprojects.com/p/click/>`_ has been chosen instead for the following reasons:
 
-* It generates help page documentation automatically
+* It generates help page documentation automatically.
 * Integrates very well with `rich <https://rich.readthedocs.io/en/stable/introduction.html>`_, which can allow for
   improved formatting of the user interface.
-* Very readable and well documented
+* Very readable, well documented, and easy-to-use.
 
-Data Validation
+The ``rich`` library mentioned above can be used to provide a more colourful and presentable appearance. It allows
+customising colours and supports basic markup.
+
+.. figure:: art/rich_tree.png
+
+    The ``rich`` library "visualising" a simple dictionary representing a dependency graph.
+
+    This library can be used in formatting the visualisation output in the command line tool.
+
+
+System Security and Integrity of Data
+-----------------------------------------------------------------------------------------------------------------------
+
+Dependency trees are used in deciding what projects to install when building a program, and a third-party developer
+can use the modules provided by depythel to assist in this process.
+
+However, a hostile actor could potentially tamper with the tree so that the user installs a malicious program without realising.
+Most projects normally have very large dependency trees, making it even easier to tamper with without detection.
+
+***********************************************************************************************************************
+Data Attack Surface Reduction
 ***********************************************************************************************************************
 
-`Beartype <https://github.com/beartype/beartype>`_ has been chosen to help validate user inputs, which is particularly
-important considering that a public API will be made available. This library has been chosen for the following reasons:
+The API will take the approach of not writing any dependency tree to the disk. If there is no dependency tree present,
+it can't be tampered with. depythel will take a more just-in-time approach, and will only fetch the tree as soon as it is required.
+Any operations on the tree will be carried out at runtime, minimising the time slot for it to be tampered with.
 
-* It provides O(1) runtime type checking.
-* No runtime dependencies
-* It allows defining custom types, such as an integer that has to be exactly two to six digits long.
+For the command line tool, it is unlikely that it will be used in a high security environment since it is tailored to more
+novice users. As such, this security policy will only be enforced for the API
 
-As such, it should provide more than enough functionality so that a user does not accidentally break a function
-depending on their input.
+
+***********************************************************************************************************************
+Checksums
+***********************************************************************************************************************
+
+.. figure:: art/hashes.png
+   
+   Three different hashes are provided for every version distributed via PyPi.
+
+The recommended method of installation for the majority of users will be from PyPi. Checksums are provided so that clients
+can check whether the source code they have downloaded is the same as that on PyPi.
+
+Checksums are also very simple to calculate. This therefore allows even more
+novice users to ensure that the files haven't been corrupted whilst downloading.
+
+.. figure:: art/signed_commit.png
+   :width: 200
+   :align: right
+
+Signing Commits
+***********************************************************************************************************************
+
+Every commit that is pushed to GitHub will be signed by my private key. This helps to ensure that the code hasn't been tampered
+with during transmission from my development environment to the online repo. Therefore, users can be confident that the
+code hasn't been interfered with by a malicious actor.
+
+GitHub has access to my public key. Whenever I push a commit, GitHub can therefore inform users whether the commit is
+"verified" or not.

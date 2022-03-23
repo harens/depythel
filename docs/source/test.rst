@@ -9,6 +9,7 @@ Some of the reasons unit testing was chosen include [1]_:
 - It's easy to test newly developed modules or functions.
 - There are some really easy-to-use unit testing frameworks for Python, such as pytest.
 
+-----------------------------------------------------------------------------------------------------------------------
 pytest
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -30,7 +31,7 @@ An example test is given below, where we assert that a cycle is present in a giv
       cycle_present = LocalTree({"a": "b", "b": "a"})
       assert cycle_present.cycle_check()
 
-
+-----------------------------------------------------------------------------------------------------------------------
 Reproducible Testing
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -116,7 +117,7 @@ To help make testing more reproducible, a GitHub Actions process was setup to te
 environments.
 
 GitHub Actions
------------------------------------------------------------------------------------------------------------------------
+***********************************************************************************************************************
 
 GitHub Actions provides the facilities to test on a variety of different python versions, whilst allowing
 others to inspect the results of testing.
@@ -184,10 +185,9 @@ The process can be broken down into the following steps:
 * Run the tests.
 * Upload code coverage if pytest is being run.
 
+-----------------------------------------------------------------------------------------------------------------------
 Test Coverage
 -----------------------------------------------------------------------------------------------------------------------
-.. image:: https://codecov.io/gh/harens/depythel/branch/main/graph/badge.svg?token=Jb2Dnbwuf4
-    :target: https://codecov.io/gh/harens/depythel
 
 Unit tests are useful in ensuring that a program works as anticipated. However,
 it is also necessary that the tests cover a large amount of the code base for them to
@@ -196,14 +196,16 @@ be effective
 Code coverage provides a numerical value that shows what percentage of the code base has been
 tested. This is determined whilst the tests are being run, by seeing which lines are called.
 
-|pytest-terminal|
+.. image:: https://codecov.io/gh/harens/depythel/branch/main/graph/badge.svg?token=Jb2Dnbwuf4
+    :target: https://codecov.io/gh/harens/depythel
 
-Whilst the GitHub actions are being run, a ``coverage.xml`` is generated. This file uploaded to `Codecov <https://about.codecov.io/>`_.
+|pytest-terminal|
 
 .. figure:: art/github-actions-coverage.png
    :align: right
-   :width: 200
-   :alt: Codecov results of a commit following automated testing.
+   :width: 260
+
+Whilst the GitHub actions are being run, a ``coverage.xml`` is generated. This file uploaded to `Codecov <https://about.codecov.io/>`_.
 
 Codecov was chosen to manage the code coverage due to its `easy integration <https://github.com/marketplace/actions/codecov>`_ with GitHub Actions. It also supports
 private GitHub repos.

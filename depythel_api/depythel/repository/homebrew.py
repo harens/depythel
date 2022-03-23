@@ -60,7 +60,7 @@ def online(
     Returns: A dictionary of build/run/etc. dependencies.
 
     Examples:
-        >>> from depythel.api.repository.homebrew import online
+        >>> from depythel.repository.homebrew import online
         >>> online("folderify")
         {'imagemagick': 'dependencies', 'python@3.9': 'dependencies'}
         >>> online("gping")

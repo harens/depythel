@@ -56,6 +56,7 @@ from depythel._utility_imports import (
 log = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.DEBUG)
 
+
 # TODO: Implement defensive programming
 # TODO: Deal with None in standard tree
 class LocalTree:
@@ -361,12 +362,9 @@ class Tree(LocalTree):
             An adjacency list representing the generated part of a dependency tree.
 
         Examples:
-            >>> from depythel.api.main import tree_generator
-            >>> # Creates a generator for the gping project from the MacPorts repository
-            >>> gping_generator = tree_generator('gping', 'macports')
-            >>> gping_generator()
-            {'gping': {'cargo': 'build', 'clang-12': 'build'}}
-            >>> gping_generator()
+            >>> from depythel.main import Tree
+            >>> gping_tree = Tree("gping", "macports")
+            >>> gping_tree.generator()
             {'gping': {'cargo': 'build', 'clang-12': 'build'}, \
     'cargo': {'cargo-bootstrap': 'build', 'cmake': 'build', 'pkgconfig': 'build', \
     'clang-12': 'build', 'curl': 'lib', 'zlib': 'lib', 'openssl11': 'lib', \
@@ -437,7 +435,7 @@ def _retrieve_from_stack(variable: str) -> Optional[Any]:
         The value of the variable.
 
     Examples:
-        >>> from depythel.api.main import _retrieve_from_stack
+        >>> from depythel.main import _retrieve_from_stack
         >>> a = 2
         >>> def demo():
         ...     a = 1
