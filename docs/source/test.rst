@@ -81,6 +81,25 @@ An example of how this mocking is done is provided below:
 Here, the `depythel.repository.homebrew.online` module is mocked. Normally, it would fetch information
 from the Homebrew package manager. Instead, the result of the function is mocked to prevent the API call being made.
 
+Mocking CLT Calls
+*******************
+
+Similar to mocking API calls, the same procedure can be done to test the command line tool. Example inputs can be simulated,
+and the output can be tested.
+
+.. code-block:: python
+
+  class TestTopologicalSort:
+    def test_standard(self) -> None:
+        """Standard topological sorting."""
+        runner = CliRunner()
+        result = runner.invoke(depythel, ["topological", "{'a': 'b', 'b': 'c'}"])
+        assert result.exit_code == 0
+        assert result.output.replace("\n", "") == "cba"
+
+A "runner" is created that invokes a click command in an isolated environment. We assert that the command completed
+successfully, and test that the output is what was expected.
+
 Isolated File System
 ***********************************************************************************************************************
 

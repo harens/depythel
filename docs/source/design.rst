@@ -111,7 +111,7 @@ They are less likely to be interested in the dependencies of dependencies.
    ``root → A → B → A1 → A2 → B1``.
 
 ***********************************************************************************************************************
-Topological Sorting
+Topological Ordering
 ***********************************************************************************************************************
 
 Dependency trees at their core are used to determine the order to install projects. For instance, to make a cake
@@ -176,6 +176,35 @@ Codebase Design
 
 For each package repository, there should be the option to retrieve the dependencies from an online API.
 By implementing this in a modular fashion, this should make it easier to support different package managers.
+
+***********************************************************************************************************************
+Static typing
+***********************************************************************************************************************
+
+Python is a dynamically typed language. This allows for fast development cycles and more concise code. However,
+for large projects such as an NEA, static typing might be seen as preferable since it can help catch mistakes
+and allows for better autocomplete.
+
+Type hints in Python aim to take the middle ground.
+
+.. code-block:: python
+
+  # No type hints
+  def odd(number):
+    """Determines whether a number is odd."""
+    return f"Your number was {number}"
+
+  # Type hints
+  def odd(number: int) -> str:
+    """Determines whether a number is odd."""
+    return f"Your number was {number}"
+
+Type hints can be checked during development using type checkers (such as `mypy <http://mypy-lang.org>`_), whilst
+still allowing for concise Python code. To still allow for dynamic typing, the types aren't in effect during runtime. For example, if a boolean was put as ``number``, this wouldn't
+cause an error.
+
+As a form of data validation, it might however be useful for it to cause an error in this scenario. This is where
+``beartype`` comes in.
 
 ***********************************************************************************************************************
 Data Validation
