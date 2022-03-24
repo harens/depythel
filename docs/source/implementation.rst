@@ -640,3 +640,321 @@ This tree should fetch information about a project from an online repository.
     >>> example_tree = Tree('gping', 'macports')
     >>> example_tree.tree
     {'gping': {'cargo': 'build', 'clang-13': 'build'}}
+
+API Requests
+_____________
+
+Before any information can be stored, it first needs to be fetched from an online repository.
+
+depythel aims to have modular support for different repositories. A file can be created for each
+repo which can then be easily integrated with the online tree class.
+
+.. code-block:: python
+
+    >>> from depythel.repository import macports, homebrew
+
+    >>> macports.online("nano")
+    {'clang-12': 'build', 'zlib': 'lib', 'gettext': 'lib', 'ncurses': 'lib', 'libmagic': 'lib', 'libiconv': 'lib'}
+
+    >>> homebrew.online("nano")
+    {'gettext': 'dependencies', 'ncurses': 'dependencies', 'pkg-config': 'build_dependencies'}
+
+.. code-block:: python
+
+    # Retrieving dependencies from the AUR.
+
+    @CacheType
+    def online(
+        name: str,
+    ) -> DictType[str, str]:  # pylint: disable=unsubscriptable-object
+        """Retrieves dependencies for NAME from the AUR web RPC interface.
+
+        Information is fetched from https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=NAME
+
+        Each dependency is grouped into the following categories:
+
+        - Depends
+        - MakeDepends
+        - OptDepends
+        - CheckDepends
+
+        Args:
+        name: The name of the project to retrieve the dependencies for.
+
+        Returns: A dictionary of build/run/etc. dependencies.
+
+        Examples:
+            >>> from depythel.repository.aur import online
+            >>> online("rget")
+            {'rustup': 'MakeDepends'}
+            >>> online("gmp-hg")
+            {'gcc-libs': 'Depends', 'sh': 'Depends', 'mercurial': 'MakeDepends'}
+            >>> online("anaconda")
+            {}
+        """
+        url = f"https://aur.archlinux.org/rpc/?v=5&type=info&arg[]={name}"
+        with urlopen(url) as api_response:
+            json_response = json.load(api_response)
+
+        if json_response["resultcount"] == 0:
+            raise HTTPError(url, 404, "Not Found", api_response.info(), None)
+
+        return {
+            dep: category
+            for category in (
+                "Depends",
+                "MakeDepends",
+                "OptDepends",
+                "CheckDepends",
+            )
+            for dep in json_response["results"][0].get(category, [])
+        }
+
+The function works by fetching and parsing the JSON response of the repository API. If the user's project
+cannot be found, it errors out. Otherwise, the JSON is converted into a dictionary that shows the purpose
+of each dependency. This process is modeled using the client-server model.
+
+This isn't a part of the online tree class since users might want to interact with the repository API
+independently of creating a new tree object.
+
+Initialisation
+________________
+
+The online tree class inherits the methods of the local tree, but expands it by adding support for fetching via an API.
+
+.. code-block:: python
+
+    class Tree(LocalTree):
+        """Manages a dependency tree from an online repository."""
+
+        def __init__(self, root: str, repository: str, size: int = 1):
+            """Manages a dependency tree from an online repository.
+
+            Args:
+                root: The project whose dependency tree should be fetched.
+                repository: Where to fetch information about a project from.
+                size: The number of projects that should be in the tree. Defaults to
+                    1 during initialisation.
+            """
+            self.root = root
+            """str: The root of the dependency tree"""
+
+            self.repo = repository
+            """str: Where information about the repository is being fetched from."""
+
+            self.size = size
+            """int: The number of projects in the tree. Defaults to 1 during initialisation"""
+
+            # For some reason, mypy doesn't like the type alias
+            # However, the dictionary always remains a dictionary
+            self.tree: AnyTree = {}  # type: ignore[assignment]
+            """AnyTree: An adjacency list representing a dependency tree."""
+
+            self.generator = self._tree_generator()
+            """Callable[[], AnyTree]: Generates dependencies for a project from the specified repository."""
+            self.set_size(self.size)
+
+            super(Tree, self).__init__(self.tree)
+
+.. code-block:: python
+
+    >>> from depythel.main import Tree
+    >>> example_tree = Tree('nano', 'macports')
+    >>> example_tree.root
+    'nano'
+    >>> example_tree.repo
+    'macports'
+    >>> example_tree.size
+    1
+    >>> example_tree.tree
+    {'nano': {'clang-12': 'build', 'zlib': 'lib', 'gettext': 'lib', ...}}
+
+The size indicates how many projects are currently in the dependency tree. By default, when the tree is initialised, only the
+root project (and its dependencies) are added, so the size is set to 1.
+
+Tree generator
+________________
+
+A generator function is used to iteratively build a project's dependency tree. This process was chosen
+in particular was choosen over an iterator since: [2]_
+
+- Rather than regenerating the whole tree during each call, it only fetches the next project.
+- Lazy evaluation helps to make it more memory-efficient.
+
+.. [2] Raicea, R., 2017. How — and why — you should use Python Generators. [online] freeCodeCamp.org. Available at: <https://www.freecodecamp.org/news/how-and-why-you-should-use-python-generators-f6fb56650888/> [Accessed 24 March 2022].
+
+.. code-block:: python
+
+    >>> from depythel.main import Tree
+    >>> example_tree = Tree('ncurses', 'macports')
+    >>> # Tree already initialised with size 1, generate size 2
+    >>> example_tree.generator()
+    >>> {'ncurses': {'clang-13': 'build'}, 'clang-13': {'cctools': 'run', 'python310': 'build', ...}}
+    >>> # Running again generates the next size up.
+    >>> example_tree.generator()
+    {'ncurses': {'clang-13': 'build'}, 'clang-13': {'cctools': 'run', 'python310': 'build', ...}
+    'cctools': {'libunwind-headers': 'build', 'clang-9.0': 'build', 'llvm-10': 'lib'}}
+
+.. code-block:: python
+
+    def _tree_generator(self) -> Callable[[], AnyTree]:
+        """Generate a dependency tree via level-order traversal.
+
+        Each call of the generator builds the next child in the tree.
+
+        Returns:
+            An adjacency list representing the generated part of a dependency tree.
+
+        Examples:
+            >>> from depythel.main import Tree
+            >>> gping_tree = Tree("gping", "macports")
+            >>> gping_tree.generator()
+            {'gping': {'cargo': 'build', 'clang-12': 'build'}, \
+    'cargo': {'cargo-bootstrap': 'build', 'cmake': 'build', 'pkgconfig': 'build', \
+    'clang-12': 'build', 'curl': 'lib', 'zlib': 'lib', 'openssl11': 'lib', \
+    'libgit2': 'lib', 'libssh2': 'lib', 'rust': 'lib'}}
+        """
+        # For some reason, mypy doesn't like the type alias
+        # However, the dictionary always remains a dictionary
+        generated_tree: AnyTree = {}  # type: ignore[assignment]
+        stack = deque([self.root])
+
+        try:
+            module = importlib.import_module(f"depythel.repository.{self.repo}")
+            log.debug(f"Using functions from depythel.repository.{self.repo}")
+        except ModuleNotFoundError:
+            log.error(f"{self.repo} is not a supported repository", exc_info=True)
+            raise
+
+        # Recommends not to use hasattr: https://hynek.me/articles/hasattr/
+        # Instead, set a default attribute as none, and check whether it exists
+        module_attribute = getattr(module, "online", None)
+
+        # This hopefully shouldn't happen, but just in case the online module doesn't exist
+        if module_attribute is None:
+            # TODO: Maybe make this error messaging better
+            log.error(
+                f"{self.repo} does not support retrieving dependencies from online"
+            )
+            raise AttributeError(
+                f"{self.repo} does not support retrieving dependencies from online"
+            )
+
+        def get_next_child() -> AnyTree:
+            nonlocal stack, generated_tree
+            # pop turns this into depth first (via a stack)
+            # popleft turns it info breadth first (via a queue)
+            if not stack:
+                log.debug("No more children left in stack - finished")
+                return generated_tree
+            next_child = stack.popleft()
+            log.info(f"Retrieving dependencies for {next_child} - popped from stack")
+            # We've checked to make sure that the attribute is defined
+            children = module.online(next_child)
+            log.debug(f"{next_child}'s dependencies: {tuple(children)}")
+            generated_tree[next_child] = children
+            stack.extend(
+                (
+                    child
+                    for child in children
+                    if child not in deque(generated_tree) + stack
+                )
+            )
+            log.debug(f"Adding {next_child}'s dependencies to the stack")
+            return generated_tree
+
+        return get_next_child
+
+This function was deliberately not set to be recursive. For very large dependency trees, we could easily hit the
+recursion limit. This would also be a less memory-efficient solution. The alternative was to make use of closure in Python.
+
+"[Closure] can be utilised to rewrite recursive functions in most circumstances and outperform the latter to a huge extent."
+
+-- `Christopher Tao, La Trobe University
+<https://towardsdatascience.com/dont-use-recursion-in-python-any-more-918aad95094c>`_
+
+Firstly, the generator checks that the repository is supported by seeing whether the module exists. Just to be safe,
+we also check that there's an ``online`` function present to retrieve information from the repository.
+
+Within the tree class, the generator is created during the initialisation of the tree object.
+
+.. code-block:: python
+
+    self.generator = self._tree_generator()
+
+The outer function stores the stack and the current state of the tree. A stack is required since the children are generated
+in a depth-first approach.
+
+The inner function, ``get_next_child``, retrieves these attributes from the outer function. It adds the generated dependencies to the stack,
+pops of the top child, and inserts it into the tree.
+
+Setting the Size
+__________________
+
+The user can set the size at initialisation (with a default size of 1), or they can change it during runtime.
+
+The size can be set to anything greater or equal to 1. The tree generator method is then used to build the rest of the tree.
+
+.. code-block:: python
+
+    >>> from depythel.main import Tree
+    >>> example_tree = Tree('nano', 'macports')
+    >>> # Two projects, nano and its dependency clang-12
+    >>> example_tree.set_size(2)
+    >>> example_tree.tree
+    {'nano': {'clang-12': 'build', 'zlib': 'lib', ...},
+    'clang-12': {'python39': 'build', 'clang-9.0': 'build', 'cmake': 'build', ...}}
+
+.. code-block:: python
+
+    def set_size(self, new_size: int) -> None:
+        """Set the number of dependencies that should be present in the tree.
+
+        Args:
+            new_size: How many projects there should be in the dependency tree.
+
+        >>> from depythel.main import Tree
+        >>> example = Tree('gping', 'macports')
+        >>> example.tree
+        {'gping': {'cargo': 'build', 'clang-13': 'build'}}
+        >>> example.set_size(2)
+        >>> example.tree
+        {'gping': {'cargo': 'build', 'clang-12': 'build'}, \
+    'cargo': {'cargo-bootstrap': 'build', 'cmake': 'build', 'pkgconfig': 'build', \
+    'clang-12': 'build', 'curl': 'lib', 'zlib': 'lib', 'openssl11': 'lib', \
+    'libgit2': 'lib', 'libssh2': 'lib', 'rust': 'lib'}}
+        """
+        if new_size < 1:
+            raise AttributeError("Size must be greater or equal to 1")
+
+        # If new items need to be added or the tree hasn't been initiated yet.
+        while len(self.tree) < new_size:
+            # Pass the tree by value, such that del below doesn't affect if.
+            new_tree = self.generator().copy()
+            if new_tree == self.tree:
+                # If there are no more children in the fetched tree from the repo, break.
+                break
+            self.tree = new_tree
+            log.debug(f"Increasing - Tree items: {tuple(self.tree)}")
+        log.debug("Finished increasing tree")
+        # Shrink the tree if required.
+        # After the first while loop, the tree might be bigger than expected.
+        # e.g. if grow followed by shrink then grow, the generator is larger than expected.
+        while len(self.tree) > new_size:
+            log.debug(f"Removing {tuple(self.tree)[-1]}")
+            del self.tree[tuple(self.tree)[-1]]
+        self.size = new_size
+
+Firstly, the new size has to be greater or equal to 1. While the tree is smaller than the desired size,
+we continually run the generator and add the result to the tree. If the tree is larger than the desired size,
+we just remove the last items of the dictionary. This works since following Python 3.7, the insertion order
+of Python dictionaries is guaranteed. [3]_
+
+Sometimes, the user might run the generator manually outside of the ``set_size`` function. This will make the size
+of the generator's output larger than expected. As such, after increasing the size of the tree by adding the generator's output,
+we check if we need to decrease it again.
+
+.. [3] GeeksforGeeks. 2022. OrderedDict in Python - GeeksforGeeks. [online] Available at: <https://www.geeksforgeeks.org/ordereddict-in-python/> [Accessed 24 March 2022].
+
+Command Line Tool
+-------------------

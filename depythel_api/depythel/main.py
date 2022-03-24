@@ -313,7 +313,6 @@ class Tree(LocalTree):
 
         super(Tree, self).__init__(self.tree)
 
-    # TODO: In testing, have grow then shrink then grow
     def set_size(self, new_size: int) -> None:
         """Set the number of dependencies that should be present in the tree.
 
