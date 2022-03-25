@@ -3,7 +3,7 @@ About
 
 |graph-image| |terminal-image|
 
-**depythel** is a series of open-source pure Python tools to help you manage dependencies in a variety of different projects.
+**depythel** is a series of open-source pure Python tools to help manage dependencies in a variety of different projects.
 
 It aims to provide a visual solution to your dependency woes, helping you to make informed judgements about how to
 manage your project distribution.
@@ -17,16 +17,6 @@ manage your project distribution.
    image:: ../../art/visualise-macports-python.png
    :width: 290
    :alt: Visualising a dependency graph for Python 3.10 from MacPorts
-
-Installation
------------------------------------------------------------------------------------------------------------------------
-
-PyPi
-***********************************************************************************************************************
-
-.. code-block:: console
-
-    $ pip install depythel
 
 License
 -----------------------------------------------------------------------------------------------------------------------

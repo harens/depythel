@@ -11,7 +11,7 @@ deal with the resulting issue ticket requests.
 
 An example of this is from the open-source text editor `lite-xl <https://lite-xl.github.io/>`_, which this document was
 (partly) written in. Some users were `having trouble with its lua dependency <https://github.com/lite-xl/lite-xl/issues/3>`_,
-since it required specifically version 5.2. It would then fail to build if it wasn't found:
+since it specifically required version 5.2. It would then fail to build if it wasn't found:
 
 .. code-block:: console
 
@@ -36,11 +36,22 @@ tool. It will be developed as a Python API first, so that programmers can config
 require a higher level of expertise in the area, and so for more novice users, a pre-configured command line tool will
 also be provided. This can then be easily integrated into existing workflows.
 
+As a project member of `MacPorts <https://www.macports.org/>`_, a package manager for macOS founded by a number of Apple
+employees in 2002, I thought that I would ask some other members what their thoughts were on the potential of this tool.
+This is since they would have experience dealing with dependency conflicts, and I wanted to know whether they thought
+depythel would be a useful aide.
+
+One of them noted its similarities to the foundations of a package manager. They liked the idea of being
+able to visualise the dependencies, which is something they thought was quite novel.
+
+Another person emphasised the need for thorough documentation of the API. They said that it would be useful if the API
+could be provided separately to the CLT, so that developers don't have to download both if they only require the API.
+
 Research methodology
 -----------------------------------------------------------------------------------------------------------------------
 
-The idea to choose a dependency conflict management project came from my experience in package managers. As a project
-member at `MacPorts <https://www.macports.org/>`_, one of the issues we face is how to deal with things such as
+The idea to choose a dependency conflict management project came from my experience in package managers. At MacPorts,
+one of the issues we face is how to deal with things such as
 circular dependencies. A language-agnostic tool to check for this would therefore be very beneficial. As a result, part
 of my research comes from real world experience with trying to deal with this problem on a platform with thousands of
 users.
@@ -141,7 +152,7 @@ Requirements specification
             * This helps to make depythel easier to use. Without adequate documentation, it would be difficult for new users
               to use depythel effectively.
 
-        #. The module must comply with `PEP 561 <https://peps.python.org/pep-0561/>`_.
+        #. The module must comply with `PEP 561 - Distributing and Packaging Type Information <https://peps.python.org/pep-0561/>`_.
 
             #. depythel should be fully type-checked, and the types of various attributes/parameters/etc. should be
                available to the user. This can then be used by autocomplete tools such as PyCharm.
@@ -153,9 +164,20 @@ Requirements specification
 
             * The user should be able to install the API easily without having to fetch dependencies and build from source.
 
-    #. Application Programming Interface
+    #. Functionality
 
-        To be a success, these modules should pass a series of fabricated scenarios via unit testing.
+        #. No third-party dependencies should be required during runtime.
+  
+            * There are all sorts of potential security risks from this, since we don't own the code. However, if
+              this API is going to be used by other developers, it needs to be suitably stable and battle tested. [1]_
+
+            * Security is a particularly important consideration for tools that manage dependencies. See :ref:`System Security and Integrity of Data`
+              for more information.  
+
+            * On a separate note, the command line tool is more likely to be used in less security-intensive environments.
+              For this reason, and to help reduce development costs, this policy will not be enforced for the CLT.
+
+        To be a success, the modules below should pass a series of fabricated scenarios via unit testing.
 
         #. It must be able to detect cycles in a dependency tree.
 
@@ -173,7 +195,7 @@ Requirements specification
             * Dependency trees are normally used to determine what dependencies to install when building a project.
               depythel should be able to determine the correct order to install these dependencies.
 
-        #. depythel should be able to retrieve information from at least three different online repositories.
+        #. depythel must be able to retrieve information from at least three different online repositories.
 
             * Dependency hell can occur in a variety of different environments. depythel should therefore be able
               to work with different repos (e.g. MacPorts, NPM, etc.)
@@ -227,36 +249,38 @@ Requirements specification
                 * It should be client-side caching and not server-side since the data is not deterministic. Dependencies can be
                   updated frequently and so it would not be wise to cache incorrect information in a database.
 
-    #. Command Line Tool
+#. Command Line Tool
 
-        Although the Python API is being developed first, a command line tool should still be available for general
-        usage. This is especially important for continuous testing integration, where a CLT can be easily added.
+    Although the Python API is being developed first, a command line tool should still be available for general
+    usage. This is especially important for continuous testing integration, where a CLT can be easily added.
 
-        #. It should provide at least the same feature set as the API.
+    #. It should provide at least the same feature set as the API.
 
-            * Although the CLT is designed with more novice users in mind, it should not be a watered down version of the API.
-              They should both have the same core functionality.
+        * Although the CLT is designed with more novice users in mind, it should not be a watered down version of the API.
+          They should both have the same core functionality.
 
-        #. Similar to the API, some form of dependency visualisation should be available.
+    #. Similar to the API, some form of dependency visualisation should be available.
 
-            * For the CLT, where the end users are less experienced, an interactive tree might be a more beneficial form of
-              visualisation.
+        * For the CLT, where the end users are less experienced, an interactive tree might be a more beneficial form of
+          visualisation.
 
-            * To be a success, there should be at least two forms of possible output available, so as to give the users choice.
+        * To be a success, there should be at least two forms of possible output available, so as to give the users choice.
 
-    #. Unit Testing
+#. Unit Testing
 
-        Unit tests provide a useful way of determining whether the code base works as intended. To pass this criteria,
-        there must be the following
+    Unit tests provide a useful way of determining whether the code base works as intended. To pass this criteria,
+    there must be the following
 
-        * Automated Testing
+    * Automated Testing
 
-            * This would provide a useful way to determine whether recent changes work as expected.
+        * This would provide a useful way to determine whether recent changes work as expected.
 
-            * This could be in the form of a GitHub actions workflow, which could test newly uploaded commits.
+        * This could be in the form of a GitHub actions workflow, which could test newly uploaded commits.
 
-        * >= 95% Test Coverage
+    * >= 95% Test Coverage
 
-            * A high test coverage is essential for making sure the code is properly tested and functions as expected.
+        * A high test coverage is essential for making sure the code is properly tested and functions as expected.
 
-            * In terms of being a success, this is pretty self-explanatory. It must pass this percentage in terms of coverage.
+        * In terms of being a success, this is pretty self-explanatory. It must pass this percentage in terms of coverage.
+
+.. [1] Karmer, J., 2016. Your Dependencies Are Your Problem; Or, Why I Don't Use React Router. [online] Jkk.github.io. Available at: <https://jkk.github.io/dependencies-your-problem> [Accessed 25 March 2022].

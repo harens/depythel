@@ -20,7 +20,7 @@ Within each Python file, a logger is setup based on the name of the module it is
     log = logging.getLogger(__name__)
 
 This allows the loggers of individual modules to be configured separately. As part of having a levelled logging system, there
-are three different types of logs.
+are three different types of logs provided.
 
 +---------+----------------------------------------------------+----------------------------------+
 | Level   | Purpose                                            | Visible to clients in ``stdout`` |
@@ -52,10 +52,85 @@ and expected routine, and there are no errors.
 
 If the user enters a repository that doesn't exist, this is an error and so is logged accordingly.
 
+Configuring Version Numbers
+-----------------------------
+
+Like any NEA project, the code base for depythel is reasonably large with a variety of different files. Some of them
+require the version number to be set, and so when a new version is published, it becomes difficult to remember
+which files require the version number to be updated.
+
+.. table::
+    :widths: 15 25 40
+
+    +----------------+-------------------------------------------------+-----------------------------------------------------------------------------------------------+
+    | File           | How many are there?                             | Why is the version number required?                                                           |
+    +================+=================================================+===============================================================================================+
+    | pyproject.toml | 2 - One for each python package                 | The version number is used when publishing packages to PyPi.                                  |
+    +----------------+-------------------------------------------------+-----------------------------------------------------------------------------------------------+
+    | __init__.py    | Quite a few - only 2 require the version number | Used when the user types ``depythel --version`` in the CLT or ``help(depythel)`` in the API.  |
+    +----------------+-------------------------------------------------+-----------------------------------------------------------------------------------------------+
+
+As such, an automated script was used to complete this job.
+
+.. code-block:: python
+
+    """Updates the version number of both the API and CLT automatically.
+
+    Does this for both manually selected toml and python files.
+    """
+
+    import fileinput
+    import re
+
+    # Process based on https://stackoverflow.com/a/11898226
+
+    VERSION_NUMBER = "0.1.0"  # Set the version number here
+    FILES = (
+        "pyproject.toml",
+        "depythel_api/pyproject.toml",
+        "depythel_api/depythel/__init__.py",
+        "depythel_clt/__init__.py",
+    )
+
+    # Determines type of file being modified
+    # Based on https://stackoverflow.com/a/36801287
+    # Replace version number surrounded in quotation marks
+    toml = re.compile('version = ".(.*)"')
+    python = re.compile('__version__ = ".(.*)"')
+
+    for file in FILES:
+        for line in fileinput.input(file, inplace=True):
+            # Double quotes since version number is string in file
+            print(
+                f'version = "{VERSION_NUMBER}"'
+                if toml.match(line)
+                else f'__version__ = "{VERSION_NUMBER}"'
+                if python.match(line)
+                else line.replace("\n", "")
+            )
+
+This module inspects each of the ``FILES``, determining which one contains a version number. The format of a version number is different
+depending on whether the file is a Python or TOML file, and so the regex is also different. If a version number is detected,
+the file is overwritten such that it is replaced with ``VERSION_NUMBER``.
+ 
+Relaxed Poetry
+----------------
+
+Originally, the `Poetry package manager <https://python-poetry.org>`_ was planning on being used to manage the project's dependencies.
+However, it wasn't able to support the desired file structure as planned in the :ref:`Design`.
+
+As such, a variant of Poetry called `Relaxed Poetry <https://github.com/bennylut/relaxed-poetry/wiki>`_ was used instead. The most useful
+feature for depythel was that it supported `multi package projects <https://github.com/bennylut/relaxed-poetry/wiki/Multi-Package-Projects>`_.
+This allowed for the depythel CLT and API to be separate PyPi packages but still reside within the same directory.
+
+Another bonus was that certain Python files could be set to run whenever the relaxed poetry command was called. This is known
+as `automated build profiles <https://github.com/bennylut/relaxed-poetry/wiki/Properties-and-Build-Profiles#automatic-build-profiles>`_.
+As a result, the automated version number script in :ref:`Configuring Version Numbers` could function without needing to be run manually.
+
 Supporting Python 3.7+
 ------------------------
 
-One of the aims that depythel set out to do was to work on all supported Python versions, which at the time of writng,
+One of the aims that depythel set out to do was to work on all supported Python versions, which at the time of writing,
 is Python 3.7-3.10. The main difficulty of this are the type hints, especially with supporting pre-3.9. Python 3.9 introduced
 a new notation of writing type hints in a more native fashion.
 
@@ -81,7 +156,7 @@ Obviously, the new style could not be used pre-Python 3.9 since it would not be 
 The natural solution to this would be to use the old method everywhere, since it is still supported. Although it looks less neat, especially
 when lots of classes are being imported from ``typing``, the functionality would still be the same.
 
-However, the introduction of `PEP 585 <https://www.python.org/dev/peps/pep-0585>`_ meant that the old notation would break in
+However, the introduction of `PEP 585 - Type Hinting Generics In Standard Collections <https://www.python.org/dev/peps/pep-0585>`_ meant that the old notation would break in
 around 2025/2026 with some new Python version [1]_. In the unlikely (but possible) scenario where depythel is still around, this
 would mean it would fail to run on the latest version of Python.
 
@@ -145,7 +220,7 @@ a module similar to `_utility_imports` that conditionally provides the right typ
 Using ``beartype.typing`` in the command line tool has a few benefits.
 
 - No need to import from a private module in the API, which would be bad practice since the API and CLT are different packages.
-- ``beartype.typing`` will be more throughly tested.
+- ``beartype.typing`` will likely be more thoroughly tested.
 - It just works as expected.
 
 Tree Types
@@ -193,6 +268,8 @@ Application Programming Interface
 As discussed in the :ref:`Design`, two separate classes were to be created to allow users to manage
 their dependencies more effectively. One aimed to support pre-defined dependency trees defined by
 an online repo. The other was to support custom user-defined trees.
+
+For a more user-orientated overview, see the :ref:`API Reference`.
 
 Local Tree
 ***********
@@ -266,7 +343,7 @@ To see how this works, let's run through the generating process with an example.
     >>> example_tree.root
     'a'
 
-    >>> # Whether the tree is a simplo, standard tree or a more complex tree
+    >>> # Whether the tree is a simple, standard tree or a more complex tree
     >>> example_tree._standard_tree
     True
 
@@ -371,9 +448,10 @@ Given a dependency, what projects require it?
         return (item for item in self.tree if project in self.tree[item])
 
 This very simple one-liner iterates through the tree checking which projects have the input as a dependency.
-Similar to the previous funciton, this one is also used by more complex modules in the tree object.
+Similar to the previous function, this one is also used by more complex modules in the tree object.
 
-A generator is produced rather than a list so as to be more memory-efficient. The items 
+A generator is produced rather than a list so as to be more memory-efficient. Each ``depends_on`` item is only generated
+when it is required, unlike a list which generates them all at once.
 
 Topological Sorting
 _____________________
@@ -451,8 +529,8 @@ We initialise the final ordering as a ``deque``, and continually try to remove a
 any dependencies. This process is repeated until there are no more dependencies left, and the final ordering is
 outputted.
 
-Retrieving from Recursion Stack
-_________________________________
+Retrieving from the Recursion Stack
+______________________________________
 
 Recursive functions work by passing the result of one call as the arguments of the next call. This can be messy
 though if more arguments need to be passed. To reduce the number of arguments required, a function was created
@@ -522,12 +600,12 @@ or **exploring**. If an exploring node is "re-explored", that means there's a cy
 
     >>> example_tree = LocalTree({"a": "b", "b": "a"})
     >>> example_tree.cycle_check()
-    WARNING: a --> b --> a
+    WARNING: a → b → a
     True
 
     >>> example_tree = LocalTree({"a": {"b": "build", "c": "library"}, "b": {"a": "build"}})
     >>> example_tree.cycle_check()
-    WARNING: a --> b --> a
+    WARNING: a → b → a
     True
 
 .. code-block:: python
@@ -588,7 +666,7 @@ or **exploring**. If an exploring node is "re-explored", that means there's a cy
         for child in children:
             if child in exploring:
                 # We've seen this child before, so a cycle is present
-                log.warning(" --> ".join(exploring + deque([child])))
+                log.warning(" → ".join(exploring + deque([child])))
                 if first:
                     return True
                 return_value = True
@@ -717,6 +795,28 @@ of each dependency. This process is modeled using the client-server model.
 This isn't a part of the online tree class since users might want to interact with the repository API
 independently of creating a new tree object.
 
+Client-Side Caching
++++++++++++++++++++++
+
+As discussed in the :ref:`Requirements specification`, caching the results of the API requests would be a beneficial
+addition to depythel for a variety of different reasons.
+
+Fortunately, ``functools`` provides a `caching decorator <https://docs.python.org/3/library/functools.html#functools.cache>`_
+that implements a Least Recently Used (LRU) strategy. This decorator can then be added to all the relevant functions.
+
+.. figure:: https://files.realpython.com/media/lru_cache_2_1.8c4f225e79d0.png
+
+    LRU Caching High Level Implentation
+
+    As the user requests items from the internet, these are stored in cache. Least frequently used
+    items are removed from the cache first.
+
+    *Valdarrama, S., n.d. Caching in Python Using the LRU Cache Strategy – Real Python. [online] Realpython.com. Available at: <https://realpython.com/lru-cache-python/#diving-into-the-least-recently-used-lru-cache-strategy> [Accessed 24 March 2022].*
+
+As part of :ref:`Supporting Python 3.7+`, one of the types that changes depending on the python version is the caching
+decorator. As such ``CacheType`` is set to ``functools.cache`` on Python 3.9+, and ``functools.lru_cache`` in older
+Python versions.
+
 Initialisation
 ________________
 
@@ -776,7 +876,7 @@ Tree generator
 ________________
 
 A generator function is used to iteratively build a project's dependency tree. This process was chosen
-in particular was choosen over an iterator since: [2]_
+in particular was chosen over an iterator since: [2]_
 
 - Rather than regenerating the whole tree during each call, it only fetches the next project.
 - Lazy evaluation helps to make it more memory-efficient.
@@ -832,7 +932,6 @@ in particular was choosen over an iterator since: [2]_
 
         # This hopefully shouldn't happen, but just in case the online module doesn't exist
         if module_attribute is None:
-            # TODO: Maybe make this error messaging better
             log.error(
                 f"{self.repo} does not support retrieving dependencies from online"
             )
@@ -865,7 +964,7 @@ in particular was choosen over an iterator since: [2]_
 
         return get_next_child
 
-This function was deliberately not set to be recursive. For very large dependency trees, we could easily hit the
+This function was deliberately not set to be recursive. Dependency trees from online repositories can be very large, and we could easily hit the
 recursion limit. This would also be a less memory-efficient solution. The alternative was to make use of closure in Python.
 
 "[Closure] can be utilised to rewrite recursive functions in most circumstances and outperform the latter to a huge extent."
@@ -958,3 +1057,277 @@ we check if we need to decrease it again.
 
 Command Line Tool
 -------------------
+
+The CLT was built using the `click framework <https://click.palletsprojects.com/en/8.0.x/>`_. Subcommands can be broken
+down into different functions, which each access relevant parts of the API.
+
+For a more user-orientated overview, see the :ref:`Command Line Overview`.
+
+Initialisation
+****************
+
+.. image:: art/help_prompt.png
+
+.. code-block:: python
+
+    @click.group()
+    @click.version_option(__version__)
+    def depythel() -> None:
+        """Interdependency Visualiser and Dependency Hell scrutiniser."""
+
+To allow for arbitrary nesting of scripts, we create a `click group <https://click.palletsprojects.com/en/8.0.x/quickstart/#nesting-commands>`_
+called depythel. This acts as the main "command" to which other subcommands are attached. As a small touch, the output of ``depythel --version``
+is set to whatever the current value of ``__version__`` is.
+
+Generating Graphs
+*******************
+
+Similar to the API, the CLT allows users to visualise a dependency tree in the form of JSON. We retrieve the output of the API,
+and format it nicely using ``rich.print_json``.
+
+.. image:: art/generate_clt.png
+
+.. code-block:: python
+
+    @click.argument("number", type=int)
+    @click.argument("repository", shell_complete=repository_complete)
+    @click.argument("name")
+    @depythel.command()
+    @beartype
+    def generate(name: str, repository: str, number: int) -> None:
+        """Outputs a dependency tree in JSON format.
+
+        A tree is generated for NAME from REPOSITORY. It generates NUMBER amounts of children.
+
+        """
+        tree_object = Tree(name, repository, number)
+        tree_object.set_size(number)
+        # Unlike API, output in a visual format
+        rich.print_json(data=tree_object.tree)
+
+``click.argument`` indicates a compulsory input e.g. ``number`` indicates the number of dependencies that should be fetched. We link this
+function to the depythel group via ``depythel.command``.
+
+``shell_complete`` allows us to provide autocompletion in the terminal for the different repositories that are supported.
+
+.. image:: art/autocomplete.png
+
+.. code-block:: python
+
+    @beartype
+    def repository_complete(
+        _ctx: Context, _args: Argument, incomplete: str
+    ) -> ListType[str]:
+        """Provides autocomplete for supported repositories."""
+        # Based on https://stackoverflow.com/a/1310912
+        pkgpath = os.path.dirname(
+            repository.__file__
+        )  # Path to __init__.py of depythel.repository
+        all_options = (name for _, name, _ in pkgutil.iter_modules([pkgpath]))
+        return [option for option in all_options if incomplete in option]
+
+As the user types in their input, this is fed into the function as ``incomplete``. The function then checks to see whether it matches
+with any of the repository modules (based off `the following <https://stackoverflow.com/questions/487971/is-there-a-standard-way-to-list-names-of-python-modules-in-a-package/1310912#1310912>`_).
+These possible modules are then returned as the autocompletion.
+
+Graph Visualisation
+*********************
+
+In the API, all visualisations of the graph are in the form of JSON. This is since it is easily parsable
+and can be more useful for third-party developers compared to an image.
+
+The command line tool has more novice users in mind, and so a more interactive output can also be outputted
+in the form of an HTML file.
+
+.. code-block:: shell
+
+    > depythel generate vim macports 5 | depythel visualise ~/Downloads/demo.html
+
+.. image:: art/graph_vis_1.png
+
+.. code-block:: shell
+
+    > depythel visualise ~/Downloads/demo.html "{'A': 'B', 'B': 'C', 'C': 'A'}"
+
+.. image:: art/graph_vis_2.png
+
+.. code-block:: python
+
+    @click.argument("tree", callback=support_pipe, required=False, type=TREE_TYPE)
+    @click.argument(
+        "path",
+        type=click.Path(dir_okay=False, writable=True),
+    )
+    @depythel.command()
+    @beartype
+    def visualise(path: str, tree: AnyTree) -> None:
+        """Generates an html file visualising a dependency graph.
+
+        TREE is the tree to visualise in the form of an adjacency list/dictionary.
+
+        PATH shows the path to an html file to store the visualisation of the output.
+        e.g. /Users/example/Downloads/tree.html
+        """
+        # Use digraph instead of tree in case of cycles
+        graph = DiGraph(tree)
+
+        network = Network(directed=True)
+        network.from_nx(graph)
+
+        # Changes to root node
+        network.nodes[0]["size"] = 20
+        network.nodes[0]["color"] = "#00ff1e"
+
+        network.show(path)
+        click.launch(path, locate=True)
+
+This converts the dictionary outputted by the depythel API into a `networkx.digraph <https://networkx.org/documentation/stable/reference/classes/digraph.html>`_ object.
+This is then parsed by `pyvis <https://pyvis.readthedocs.io/en/latest/tutorial.html>`_, which outputs an HTML file. Click then shows
+the location of the file in the user's file directory.
+
+Tree Type
+___________
+
+The click framework automatically checks whether the user's input matches with the type specified. For instance,
+if the user entered an integer for the tree, it would error.
+
+Checking whether the user's tree is valid required creating a custom type.
+
+.. code-block:: python
+
+    class TreeType(click.ParamType):
+        """Parses the user's tree from the command line.
+
+        e.g. Turns an input of '{"a": "b", "b": "a"}' into {"a": "b", "b": "a"}
+
+        Based on https://click.palletsprojects.com/en/8.0.x/parameters/#implementing-custom-types
+        """
+
+        # N.B. This intentionally overrides the standard name attribute and convert method.
+        name = "tree"
+
+        @beartype
+        def convert(
+            self,
+            value: str,
+            param: Optional[click.core.Parameter],
+            ctx: Optional[click.core.Context],
+        ) -> Any:
+            """Parses the user's string into a dictionary, and errors out if it's not possible."""
+            try:
+                return ast.literal_eval(value)
+            except (SyntaxError, ValueError):
+                self.fail(
+                    f"{value} is an invalid tree.",
+                    param,
+                    ctx,
+                )
+
+Here, we override the convert method in the ``click.ParamType`` class. We try to safely parse the tree, treating it as a dictionary,
+and if we fail to do so we know that the tree is invalid. The `click docs <https://click.palletsprojects.com/en/8.0.x/parameters/#implementing-custom-types>`_
+provided an example of how to implement custom types, from which this funciton is based.
+
+.. image:: art/invalid_tree.png
+
+Piping
+________
+
+Piping support for the dependency tree is added by a ``support_pipe`` callback.
+
+.. code-block:: python
+
+    @beartype
+    def support_pipe(
+        _ctx: Optional[click.core.Context],
+        param: Optional[click.core.Parameter],
+        value: Any,
+    ) -> Any:
+        """This allows the depythel function to support piping input."""
+        # Based on https://github.com/pallets/click/issues/1370#issuecomment-522549260
+        if not value and not click.get_text_stream("stdin").isatty():
+            # Piped input (and maybe stdin input)
+            user_input = click.get_text_stream("stdin").read().strip()
+            if param is not None and param.human_readable_name == "TREE":
+                return TREE_TYPE.convert(user_input, None, None)
+            return user_input
+        # No input provided
+        return value
+
+If a fixed tree is provided as an argument, that is used. If no argument was provided, the function checks to see
+whether a tree was piped, and so uses that. This `click issue comment <https://github.com/pallets/click/issues/1370#issuecomment-522549260>`_
+provided the foundations for this function.
+
+The benefits include allowing users to pipe the output of the ``generate`` command into ``visualise``, giving them the ability them to view
+the graphs of projects in online repositories. Alternatively, they can enter in their own custom tree
+in the form of a dictionary.
+
+Topological Sorting and Cycle Checking
+_______________________________________
+
+.. image:: art/cycle_clt.png
+
+The topological sorting and cycle checking subcommands can act as a frontend of the API. Similar to
+the other commands, they both support checking the type of the user's tree and piping.
+
+.. code-block:: python
+
+    @click.argument("tree", callback=support_pipe, required=False, type=TREE_TYPE)
+    @depythel.command()
+    @beartype
+    def topological(tree: AnyTree) -> None:
+        """Determines an order in which dependencies can be installed.
+
+        TREE is a directed acyclic graph representing a dependency tree.
+
+        """
+        tree_object = LocalTree(tree)
+        for item in tree_object.topological_sort():
+            click.echo(item)
+
+
+    @click.argument("tree", callback=support_pipe, required=False, type=TREE_TYPE)
+    @click.option(
+        "--first/--all",
+        default=True,
+        help="--first halts after the first cycle is found (default). --all generates all cycles.",
+    )
+    @depythel.command()
+    @beartype
+    def cycle(tree: AnyTree, first: bool) -> None:
+        """Perform a level-order traversal of TREE looking for any cycles."""
+        tree_object = LocalTree(tree)
+        click.echo(tree_object.cycle_check(first))
+
+In both instances, we create a tree object based on the tree inputted in by the user, and then run the relevant
+method. Similar to the API, by default, the command halts as soon as the first cycle is detected. However, a separate flag
+is provided to allow users to see all the cycles present.
+
+Installation
+--------------
+
+As important as it is to have good, working code, it is also important that the clients have the facilities to install
+the program.
+
+As such, both the source code and a `wheel file <https://pythonwheels.com>`_ of the current version are published on PyPi. This allows users
+to install the programs via ``pip``.
+
+As shown in the :ref:`design` (file structure), the tests were deliberately left out of the python modules so as to reduce
+the file sizes.
+
+Particular effort is made to generate a wheel file since it has numerous benefits: [4]_
+
+- More consistent installs across platforms and machines.
+- Faster installation for pure Python and native C extension packages.
+- Creates .pyc files as part of installation to ensure they match the Python interpreter used.
+
+The process of building and distributing the program can then be easily done via Poetry (relaxed-poetry).
+
+.. code-block:: shell
+
+    > # Install both the CLT and the API
+    > pip install depythel
+
+    > # Install only the API
+    > pip install depythel-api
+
+.. [4] Pythonwheels.com. n.d. Python Wheels. [online] Available at: <https://pythonwheels.com> [Accessed 24 March 2022]. 

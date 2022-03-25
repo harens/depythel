@@ -31,6 +31,27 @@ An example test is given below, where we assert that a cycle is present in a giv
       cycle_present = LocalTree({"a": "b", "b": "a"})
       assert cycle_present.cycle_check()
 
+--------------------------
+Tests for Code Formatting
+--------------------------
+
+`black <https://black.readthedocs.io/en/stable/#>`_ and `isort <https://pycqa.github.io/isort/>`_ were used as part
+of the testing infrastructure to ensure the code base was well-formatted and followed a consistent style.
+
+`pydocstyle <https://www.pydocstyle.org/en/stable/>`_ was used to ensure that every public method, attribute and module
+had some form of documentation that was properly formatted. This also helped with compliance of
+`PEP 257 - Docstring Conventions <https://peps.python.org/pep-0257/>`_.
+
+-----
+mypy
+-----
+
+depythel takes :ref:`static typing` very seriously. As such, the code base is fully type checked and this is
+inspected during testing using `mypy <http://mypy-lang.org>`_.
+
+depythel aims to go even further, and enables `mypy strict mode <https://mypy.readthedocs.io/en/stable/command_line.html#cmdoption-mypy-strict>`_.
+This examines the code base against even more type checking tests. On the top of this, the tests will fail if there are any typing errors whatsoever.
+
 -----------------------------------------------------------------------------------------------------------------------
 Reproducible Testing
 -----------------------------------------------------------------------------------------------------------------------
@@ -138,6 +159,9 @@ environments.
 GitHub Actions
 ***********************************************************************************************************************
 
+.. image:: art/github-badge.svg
+    :target: https://github.com/harens/depythel/actions/workflows/test.yml
+
 GitHub Actions provides the facilities to test on a variety of different python versions, whilst allowing
 others to inspect the results of testing.
 
@@ -204,19 +228,72 @@ The process can be broken down into the following steps:
 * Run the tests.
 * Upload code coverage if pytest is being run.
 
+---------
+Makefile
+---------
+
+.. image:: art/makefile.png
+
+Different virtual machines are set up to test different components. To minimise code duplication within the YAML file,
+a Makefile was created. This split the testing up into different sections that could then be run separately.
+
+.. code-block:: makefile
+
+  .PHONY: docs  # The docs directory already exists
+  all: format test
+
+  POETRY_CMD:=rp  # Relaxed poetry
+  CMD:=$(POETRY_CMD) run python -m
+
+  format: ## Runs black and isort
+    $(CMD) isort .
+    $(CMD) black .
+
+  test: pytest type-checking lint dependencies  ## Runs all available tests (pytest, type checking, etc.)
+  install: install-pytest install-type-checking install-dependencies install-lint
+
+  pytest:  ## Runs pytest on the tests folder and outputs coverage.xml
+    $(CMD) pytest --cov-report=xml:coverage.xml --cov=depythel_api/depythel --cov=depythel_clt depythel_api/tests tests
+
+  install-pytest:
+    $(CMD) pip install pytest pytest-cov pytest-mock
+
+  type-checking:  ## Runs mypy --strict
+    $(CMD) mypy --strict depythel_api depythel_clt tests
+
+  install-type-checking:  # pytest required for mypy of test files
+    $(CMD) pip install mypy==0.931 pytest pytest-mock
+
+  dependencies:  ## Verifies pyproject.toml file integrity
+    $(POETRY_CMD) check
+    $(CMD) pip check
+
+  install-dependencies:  ## Don't install anything
+    @:
+
+  lint:  ## Tests whether formatting meets standards
+    $(CMD) black --check .
+    $(CMD) isort --check-only .
+    $(CMD) pydocstyle --convention=google .
+
+  install-lint:
+    $(CMD) pip install black isort pydocstyle
+
+
 -----------------------------------------------------------------------------------------------------------------------
 Test Coverage
 -----------------------------------------------------------------------------------------------------------------------
 
+.. image:: https://codecov.io/gh/harens/depythel/branch/main/graph/badge.svg?token=Jb2Dnbwuf4
+    :target: https://codecov.io/gh/harens/depythel
+
 Unit tests are useful in ensuring that a program works as anticipated. However,
 it is also necessary that the tests cover a large amount of the code base for them to
-be effective
+be effective. On top of this, it is necessary to not only test the simple parts of the
+code base, but also the more technically challenging parts.
 
 Code coverage provides a numerical value that shows what percentage of the code base has been
 tested. This is determined whilst the tests are being run, by seeing which lines are called.
-
-.. image:: https://codecov.io/gh/harens/depythel/branch/main/graph/badge.svg?token=Jb2Dnbwuf4
-    :target: https://codecov.io/gh/harens/depythel
 
 |pytest-terminal|
 

@@ -20,6 +20,7 @@ Documentation License`".
       design
       implementation
       test
+      evaluation
       clt
       reference
       gnu

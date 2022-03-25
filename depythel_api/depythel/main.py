@@ -249,7 +249,7 @@ class LocalTree:
                 # TODO: Provide some opinionated way of determining which cycles are worse.
                 # TODO: Highlight dependency that is circular
                 # Since this is the api, maybe don't use arrows
-                log.warning(" --> ".join(exploring + deque([child])))
+                log.warning(" → ".join(exploring + deque([child])))
                 if first:
                     return True
                 return_value = True
