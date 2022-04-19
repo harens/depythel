@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: "software"
+authors:
+- family-names: "Samarasinghe"
+  name-suffix: "Mr"
+  given-names: "Haren"
+  affiliation: "St Paul's School"
+title: "depythel"
+version: 0.1.0
+date-released: 2022-04-19
+url: "https://github.com/harens/depythel"
