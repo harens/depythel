@@ -41,7 +41,7 @@ from depythel._utility_imports import CacheType, DictType
 
 # pylint doesn't like the dicttype return type.
 # TODO: might be nice to have the dictionary quotations be double quotes
-# This allows compatability with JSON
+# This allows compatibility with JSON
 @CacheType
 def online(
     name: str,

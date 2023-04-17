@@ -28,7 +28,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""The main functionallity behind the depythel CLT."""
+"""The main functionality behind the depythel CLT."""
 
 # N.B. could instead be "from networkx import DiGraph"
 # networkx.classes used to make mypy happy

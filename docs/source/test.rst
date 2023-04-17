@@ -307,7 +307,7 @@ Codecov was chosen to manage the code coverage due to its `easy integration <htt
 private GitHub repos.
 
 If the code coverage decreases following a commit, the tests are set to fail. This helps to ensure
-that new code additons are throughly tested before being commited.
+that new code additons are thoroughly tested before being committed.
 
 One of the key aims before starting the project was to have a test coverage of >90%. As of the time of writing,
 ~96% of the code is tested, which is above the target.

@@ -806,7 +806,7 @@ that implements a Least Recently Used (LRU) strategy. This decorator can then be
 
 .. figure:: https://files.realpython.com/media/lru_cache_2_1.8c4f225e79d0.png
 
-    LRU Caching High Level Implentation
+    LRU Caching High Level Implementation
 
     As the user requests items from the internet, these are stored in cache. Least frequently used
     items are removed from the cache first.
@@ -1225,7 +1225,7 @@ Checking whether the user's tree is valid required creating a custom type.
 
 Here, we override the convert method in the ``click.ParamType`` class. We try to safely parse the tree, treating it as a dictionary,
 and if we fail to do so we know that the tree is invalid. The `click docs <https://click.palletsprojects.com/en/8.0.x/parameters/#implementing-custom-types>`_
-provided an example of how to implement custom types, from which this funciton is based.
+provided an example of how to implement custom types, from which this function is based.
 
 .. image:: art/invalid_tree.png
 

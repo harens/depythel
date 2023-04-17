@@ -225,7 +225,7 @@ Some of the feedback received during the analysis stage included the following:
 
 * Provide an interactive form of visualisation.
   
-    * This was part of our original set of requirements, and has been implemented as part of the commnd line tool.
+    * This was part of our original set of requirements, and has been implemented as part of the command line tool.
 
 * Fully document the API.
 
